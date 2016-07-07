@@ -2,7 +2,7 @@ var config = {};
 
 // Server Settings
 config.server = {};
-config.server.port = 61000; // https://wiki.uberspace.de/system:ports
+config.server.port = 61002; // https://wiki.uberspace.de/system:ports
 
 // HERE App Settings
 config.here = {};
