@@ -8,7 +8,9 @@
   },
   "author": "",
   "license": "ISC",
+  "repository": "https://github.com/FH-Potsdam/digenti-api",
   "dependencies": {
+    "concaveman": "^1.1.0",
     "express": "^4.14.0",
     "turf": "^3.0.14"
   }

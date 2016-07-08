@@ -19,3 +19,9 @@ This will install all dependencies.
 You will need to enter some configuration parameters within a `config.js` file, placed in the main folder.
 
 - Rename `config.sample.js` to `config.js` or create a copy by this name.
+
+## Dependencies
+
+- [turf.js](https://github.com/Turfjs/turf)
+- [concaveman](https://github.com/mapbox/concaveman)
+- [Express](http://expressjs.com/)
