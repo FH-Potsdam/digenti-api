@@ -2,7 +2,7 @@
   "name": "digenti-api",
   "version": "1.0.0",
   "description": "DIGENTI REST API",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,8 +10,14 @@
   "license": "ISC",
   "repository": "https://github.com/FH-Potsdam/digenti-api",
   "dependencies": {
+    "bluebird": "^3.4.1",
+    "body-parser": "^1.15.2",
     "concaveman": "^1.1.0",
     "express": "^4.14.0",
+    "morgan": "^1.7.0",
+    "pg-promise": "^5.1.2",
+    "querystring": "^0.2.0",
+    "request": "^2.73.0",
     "turf": "^3.0.14"
   }
 }
