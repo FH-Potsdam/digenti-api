@@ -8,6 +8,7 @@ router.get('/api/places/:id', db.getPlace);
 
 // HERE API
 var here = require('./here');
+// router.get('/api/isoline/', here.getIsoline);
 router.get('/api/isoline/:coords/:range', here.getIsoline);
 
 // HERE API
