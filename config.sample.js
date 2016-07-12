@@ -4,6 +4,12 @@ var config = {};
 config.server = {};
 config.server.port = 61002; // https://wiki.uberspace.de/system:ports
 
+// PostGres DB
+config.db = {};
+config.db.name = 'YOUR_DB_NAME';
+config.db.host = 'YOUR_DB_HOST'; // localhost
+config.db.port = 'YOUR_DB_PORT'; // 5432
+
 // HERE App Settings
 config.here = {};
 config.here.app_id = 'YOUR_APP_ID';
