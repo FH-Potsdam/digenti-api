@@ -1,0 +1,145 @@
+{
+    "response": {
+        "metaInfo": {
+            "timestamp": "2016-07-14T12:33:47Z",
+            "mapVersion": "8.30.62.159",
+            "moduleVersion": "7.2.71.0-39010",
+            "interfaceVersion": "2.6.25"
+        },
+        "route": [{
+            "routeId": "AHkACAAAAB4AAAA+AAAAnwAAAJMAAAB42mOYzMDAwsQABA2Pezs1P/qnMkBB8qMQsR3M9jYM//9DBD7sZ0ACXEBclnWzm4nhQGl755y7AXCNiUqhYoKM9lZ4NCq2aSszMjAwwQVXfOH8ZA6kWRlCmFQYGAAx0BurHjte3A==",
+            "waypoint": [{
+                "linkId": "-53479844",
+                "mappedPosition": {
+                    "latitude": 52.470517,
+                    "longitude": 13.4356206
+                },
+                "originalPosition": {
+                    "latitude": 52.4703847,
+                    "longitude": 13.4356678
+                },
+                "type": "stopOver",
+                "spot": 0.2321429,
+                "sideOfStreet": "left",
+                "mappedRoadName": "Schierker Straße",
+                "label": "Schierker Straße",
+                "shapeIndex": 0
+            }, {
+                "linkId": "+924951510",
+                "mappedPosition": {
+                    "latitude": 52.4833417,
+                    "longitude": 13.4028053
+                },
+                "originalPosition": {
+                    "latitude": 52.4754583,
+                    "longitude": 13.4003538
+                },
+                "type": "stopOver",
+                "spot": 0,
+                "sideOfStreet": "neither",
+                "mappedRoadName": "Columbiadamm",
+                "label": "Columbiadamm",
+                "shapeIndex": 40
+            }],
+            "mode": {
+                "type": "fastest",
+                "transportModes": ["car"],
+                "trafficMode": "disabled",
+                "feature": []
+            },
+            "shape": ["52.470517,13.4356206,89.0", "52.4701452,13.4324169,98.0", "52.4698448,13.4299815,97.0", "52.4702847,13.4297454,97.0", "52.4709177,13.4294343,97.0", "52.4719584,13.4288657,95.0", "52.4721301,13.4287906,94.0", "52.4722481,13.4287155,94.0", "52.4725592,13.4285653,94.0", "52.4730098,13.4283185,95.0", "52.4743295,13.427664,98.0", "52.4744475,13.4275889,98.0", "52.4755311,13.4270418,97.0", "52.4778163,13.4260547,97.0", "52.477988,13.4259582,97.0", "52.4781919,13.4258723,98.0", "52.478267,13.4259152,98.0", "52.4783635,13.425926,98.0", "52.4784923,13.4258938,98.0", "52.478621,13.4258401,98.0", "52.4792218,13.4256792,98.0", "52.4798012,13.4254754,98.0", "52.4806702,13.4252179,98.0", "52.4807882,13.425175,99.0", "52.480756,13.425014,99.0", "52.4805415,13.4230185,99.0", "52.4803162,13.4211087,98.0", "52.4802411,13.4204757,96.0", "52.4801552,13.4201217,95.0", "52.4800694,13.419435,93.0", "52.4800479,13.4189951,92.0", "52.4801016,13.4182119,91.0", "52.4801874,13.4176862,91.0", "52.4804771,13.4163237,90.0", "52.4807239,13.41524,90.0", "52.4811959,13.4129977,89.0", "52.4814749,13.4117746,88.0", "52.4820864,13.4088349,88.0", "52.482419,13.4073436,86.0", "52.4831808,13.4037709,83.0", "52.4833417,13.4028053,83.0"],
+            "leg": [{
+                "maneuver": [{
+                    "position": {
+                        "latitude": 52.470517,
+                        "longitude": 13.4356206
+                    },
+                    "instruction": "Head toward <span class=\"toward_street\">Ilsestraße</span> on <span class=\"street\">Schierker Straße</span>. <span class=\"distance-description\">Go for <span class=\"length\">390 m</span>.</span>",
+                    "travelTime": 74,
+                    "length": 390,
+                    "shape": ["52.470517,13.4356206,89.0", "52.4701452,13.4324169,98.0", "52.4698448,13.4299815,97.0"],
+                    "note": [],
+                    "direction": "forward",
+                    "action": "depart",
+                    "startAngle": 257,
+                    "id": "M1",
+                    "_type": "PrivateTransportManeuverType"
+                }, {
+                    "position": {
+                        "latitude": 52.4698448,
+                        "longitude": 13.4299815
+                    },
+                    "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">Hermannstraße</span>. <span class=\"distance-description\">Go for <span class=\"length\">1.2 km</span>.</span>",
+                    "travelTime": 154,
+                    "length": 1248,
+                    "shape": ["52.4698448,13.4299815,97.0", "52.4702847,13.4297454,97.0", "52.4709177,13.4294343,97.0", "52.4719584,13.4288657,95.0", "52.4721301,13.4287906,94.0", "52.4722481,13.4287155,94.0", "52.4725592,13.4285653,94.0", "52.4730098,13.4283185,95.0", "52.4743295,13.427664,98.0", "52.4744475,13.4275889,98.0", "52.4755311,13.4270418,97.0", "52.4778163,13.4260547,97.0", "52.477988,13.4259582,97.0", "52.4781919,13.4258723,98.0", "52.478267,13.4259152,98.0", "52.4783635,13.425926,98.0", "52.4784923,13.4258938,98.0", "52.478621,13.4258401,98.0", "52.4792218,13.4256792,98.0", "52.4798012,13.4254754,98.0", "52.4806702,13.4252179,98.0"],
+                    "note": [],
+                    "direction": "right",
+                    "action": "rightTurn",
+                    "startAngle": 258,
+                    "id": "M2",
+                    "_type": "PrivateTransportManeuverType"
+                }, {
+                    "position": {
+                        "latitude": 52.4806702,
+                        "longitude": 13.4252179
+                    },
+                    "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Flughafenstraße</span>. <span class=\"distance-description\">Go for <span class=\"length\">295 m</span>.</span>",
+                    "travelTime": 63,
+                    "length": 295,
+                    "shape": ["52.4806702,13.4252179,98.0", "52.4807882,13.425175,99.0", "52.480756,13.425014,99.0", "52.4805415,13.4230185,99.0", "52.4803162,13.4211087,98.0"],
+                    "note": [],
+                    "direction": "left",
+                    "action": "leftTurn",
+                    "startAngle": 348,
+                    "id": "M3",
+                    "_type": "PrivateTransportManeuverType"
+                }, {
+                    "position": {
+                        "latitude": 52.4803162,
+                        "longitude": 13.4211087
+                    },
+                    "instruction": "Continue on <span class=\"next-street\">Columbiadamm</span>. <span class=\"distance-description\">Go for <span class=\"length\">1.3 km</span>.</span>",
+                    "travelTime": 98,
+                    "length": 1305,
+                    "shape": ["52.4803162,13.4211087,98.0", "52.4802411,13.4204757,96.0", "52.4801552,13.4201217,95.0", "52.4800694,13.419435,93.0", "52.4800479,13.4189951,92.0", "52.4801016,13.4182119,91.0", "52.4801874,13.4176862,91.0", "52.4804771,13.4163237,90.0", "52.4807239,13.41524,90.0", "52.4811959,13.4129977,89.0", "52.4814749,13.4117746,88.0", "52.4820864,13.4088349,88.0", "52.482419,13.4073436,86.0", "52.4831808,13.4037709,83.0", "52.4833417,13.4028053,83.0"],
+                    "note": [],
+                    "direction": "forward",
+                    "action": "continue",
+                    "startAngle": 258,
+                    "id": "M4",
+                    "_type": "PrivateTransportManeuverType"
+                }, {
+                    "position": {
+                        "latitude": 52.4833417,
+                        "longitude": 13.4028053
+                    },
+                    "instruction": "Arrive at <span class=\"street\">Columbiadamm</span>.",
+                    "travelTime": 0,
+                    "length": 0,
+                    "shape": ["52.4833417,13.4028053,83.0"],
+                    "note": [{
+                        "type": "info",
+                        "code": "previousIntersection",
+                        "text": "The last intersection is <span class=\"street\">Lilienthalstraße</span>"
+                    }],
+                    "direction": "forward",
+                    "action": "arrive",
+                    "startAngle": 0,
+                    "id": "M5",
+                    "_type": "PrivateTransportManeuverType"
+                }]
+            }],
+            "summary": {
+                "distance": 3238,
+                "trafficTime": 578,
+                "baseTime": 389,
+                "flags": ["builtUpArea", "park"],
+                "text": "The trip takes <span class=\"length\">3.2 km</span> and <span class=\"time\">6 mins</span>.",
+                "travelTime": 389,
+                "_type": "RouteSummaryType"
+            }
+        }],
+        "language": "en-us"
+    }
+}
