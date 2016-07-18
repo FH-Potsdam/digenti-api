@@ -47,6 +47,10 @@ If everything is ok, you should see:
 {"status":"success","message":"Live long and prosper!"}
 ```
 
+## Setting up the PostGRE / PostGIS Database
+
+- https://redmine.geoway.de/projects/digenti/wiki/Notes
+
 ## Setting up your queries
 
 - `api/here.js`: HERE API functions and exports.
