@@ -17,8 +17,14 @@ router.get('/api', function(req, res, next) {
 //////////////////
 
 var db = require('./postgres');
+
+// Places
 router.get('/api/places', db.getAllPlaces);
 router.get('/api/places/:id', db.getPlace);
+
+// FOS
+router.get('/api/fos/place/:id/', db.getFOSByPlaceID);
+router.get('/api/fos/place/:id/:radius', db.getFOSByPlaceID);
 
 
 //////////////
