@@ -62,10 +62,11 @@ here.shapeToCoordinatesArray = function(shape) {
                         .map(Number)  // We still get the objects parsed as string
                         .reverse();   // Reverse lat/lon as lon/lat for GeoJSON
 
-        // Remove altitude for coordinates with 3 components
-        // This needs to be fixed and only reverse lat/lon
-        if (coords.length == 3)
-            coords = coords.splice(1);
+        // Format altitude for coordinates with 3 components (including altitude)
+        if (coords.length == 3) {
+            var altitude = coords.splice(0, 1)[0];
+            coords.push(altitude);
+        }
 
         return coords;
     });

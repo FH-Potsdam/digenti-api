@@ -34,7 +34,8 @@ var routeParams = {
     representation: 'display',
     routeattributes: 'waypoints,summary,shape,legs,routeId',
     maneuverattributes: 'direction,action,travelTime,startAngle',
-    returnelevation: 'true'
+    returnelevation: 'true',
+    legAttributes: 'maneuvers,waypoint,length,travelTime'
     // waypoint0: 'geo!52.51578,13.37749', // start
     // waypoint1: 'geo!52.51578,13.37749'  // end
     // avoidareas: 52.517100760,[Bounding Box]
