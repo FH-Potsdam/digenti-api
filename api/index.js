@@ -23,8 +23,10 @@ router.get('/api/places', db.getAllPlaces);
 router.get('/api/places/:id', db.getPlace);
 
 // FOS
-router.get('/api/fos/place/:id/', db.getFOSByPlaceID);
+router.get('/api/fos/place/:id', db.getFOSByPlaceID);
 router.get('/api/fos/place/:id/:radius', db.getFOSByPlaceID);
+router.get('/api/fos/:coords', db.getFOSByCoords);
+router.get('/api/fos/:coords/:radius', db.getFOSByCoords);
 
 
 //////////////

@@ -54,8 +54,6 @@ function getIsoline(req, res, next) {
         coords = (req.params.coords).split(","),
         range = parseInt(req.params.range)*60; // The range's unit is seconds
 
-    console.log('\n'+center+'\n');
-
     // Query params
     var params = {};
     params[center] = 'geo!'+coords[0]+','+coords[1];

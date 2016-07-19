@@ -66,13 +66,14 @@ function getPlace(req, res, next) {
 
 // api/fos/place/:id/:radius
 function getFOSByPlaceID(req, res, next) {
-    var placeID = parseInt(req.params.id),
+    // var placeID = parseInt(req.params.id),
+    var placeID = req.params.id,
         radius = (typeof req.params.radius !== 'undefined') ? parseInt(req.params.radius) : 1200;
 
     console.log("Get FOS values for settlement with ID " + placeID + " within radius of " + radius + " m");
 
     // Convert to Grads (0.01 = 1200m)
-    radius = 0.01*(radius/1200);
+    var radiusGrad = 0.01*(radius/1200);
 
     db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
              FROM (SELECT 'Feature' As type \
@@ -82,7 +83,7 @@ function getFOSByPlaceID(req, res, next) {
                FROM (	 \
             		WITH polygons AS (SELECT \
             		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE gid = " + placeID + " LIMIT 1), 4326), " + radius + ") AS geom \
+            		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE osm_id = '"+placeID+"' LIMIT 1), 4326), "+radiusGrad+") AS geom \
             		) \
             		SELECT \
             		    p.gid AS uid, fos.gid AS gid, dn, \
@@ -91,8 +92,69 @@ function getFOSByPlaceID(req, res, next) {
             		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 5 \
                ) As lg ) As f;")
         .then(function (data) {
+            var fc = data[0];
+
+            // Add query properties
+            fc.properties = {
+                query: 'fos/place',
+                osm_id: placeID,
+                radius: radius
+            };
+
             res.status(200)
-                .json(data[0]);
+                .json(fc);
+                // .json({
+                //     status: 'success',
+                //     data: data,
+                //     message: 'Retrieved ONE place'
+                // });
+        })
+        .catch(function (err) {
+            return next(err);
+        });
+}
+
+// api/fos/:coords/:radius
+function getFOSByCoords(req, res, next) {
+    var coords = (req.params.coords).split(","),
+        radius = (typeof req.params.radius !== 'undefined') ? parseInt(req.params.radius) : 1200;
+
+    // Convert to Grads (0.01 = 1200m)
+    var radiusGrad = 0.01*(radius/1200);
+
+    // PostGIS Point
+    var point = "POINT("+coords[1]+" "+coords[0]+")";
+
+    console.log("Get FOS values from " + req.params.coords + " within radius of " + radius + " m");
+
+    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+             FROM (SELECT 'Feature' As type \
+                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
+                  )) As properties \
+                , ST_AsGeoJSON(lg.geom)::json As geometry \
+               FROM (	 \
+            		WITH polygons AS (SELECT \
+            		    1 AS gid, \
+            		    ST_Buffer(ST_SetSRID(ST_GeomFromText('"+point+"'), 4326), "+radiusGrad+") AS geom \
+            		) \
+            		SELECT \
+            		    p.gid AS uid, fos.gid AS gid, dn, \
+            		    ST_Intersection(fos.geom, p.geom) AS geom \
+            		FROM polygons AS p, colombia_fos_roi_h5_m0 AS fos \
+            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 5 \
+               ) As lg ) As f;")
+        .then(function (data) {
+            var fc = data[0];
+
+            // Add query properties
+            fc.properties = {
+                query: 'fos',
+                coords: req.params.coords,
+                radius: radius
+            };
+
+            res.status(200)
+                .json(fc);
                 // .json({
                 //     status: 'success',
                 //     data: data,
@@ -112,4 +174,5 @@ module.exports = {
     getAllPlaces: getAllPlaces,
     getPlace: getPlace,
     getFOSByPlaceID: getFOSByPlaceID,
+    getFOSByCoords: getFOSByCoords
 };
