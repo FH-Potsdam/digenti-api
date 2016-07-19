@@ -36,21 +36,6 @@ function getAllPlaces(req, res, next) {
             return next(err);
         });
 }
-/*function getAllPlaces(req, res, next) {
-    db.any('select osm_id, name, type, ST_Y(geom) as lat, ST_X(geom) as lon from places_aoi_2d')
-        .then(function (data) {
-            res.status(200)
-                .json(data);
-                // .json({
-                //     status: 'success',
-                //     data: data,
-                //     message: 'Retrieved ALL places'
-                // });
-        })
-        .catch(function (err) {
-            return next(err);
-        });
-}*/
 
 // api/places/:id
 function getPlace(req, res, next) {
@@ -73,22 +58,6 @@ function getPlace(req, res, next) {
             return next(err);
         });
 }
-/*function getPlace(req, res, next) {
-    var placeID = parseInt(req.params.id);
-    db.any('select osm_id, name, type, ST_Y(geom) as lat, ST_X(geom) as lon from places_aoi_2d where gid = $1', placeID)
-        .then(function (data) {
-            res.status(200)
-                .json(data);
-                // .json({
-                //     status: 'success',
-                //     data: data,
-                //     message: 'Retrieved ONE place'
-                // });
-        })
-        .catch(function (err) {
-            return next(err);
-        });
-}*/
 
 
 ///////////////////
@@ -113,7 +82,7 @@ function getFOSByPlaceID(req, res, next) {
                FROM (	 \
             		WITH polygons AS (SELECT \
             		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE gid = " + placeID + " LIMIT 1), 4326), " + radius + ", 'quad_segs=2') AS geom \
+            		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE gid = " + placeID + " LIMIT 1), 4326), " + radius + ") AS geom \
             		) \
             		SELECT \
             		    p.gid AS uid, fos.gid AS gid, dn, \

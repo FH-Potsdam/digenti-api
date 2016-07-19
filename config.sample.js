@@ -12,6 +12,8 @@ config.db.port = 'YOUR_DB_PORT'; // 5432
 
 // HERE App Settings
 config.here = {};
+config.here.isoline_base = 'https://isoline.route.cit.api.here.com/routing/7.2/calculateisoline.json';
+config.here.route_base = 'https://route.cit.api.here.com/routing/7.2/calculateroute.json';
 config.here.app_id = 'YOUR_APP_ID';
 config.here.app_code = 'YOUR_APP_CODE';
 
