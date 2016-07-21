@@ -22,15 +22,23 @@ var db = require('./postgres');
 router.get('/api/places', db.getAllPlaces);
 router.get('/api/places/:id', db.getPlace);
 
-// FOS
-router.get('/api/fos/place/:id', db.getFOSByPlaceID);
-router.get('/api/fos/place/:id/:radius', db.getFOSByPlaceID);
+// Roads
+router.get('/api/roads', db.getAllRoads);
+router.get('/api/roads/:id', db.getRoad);
 
+// FOS OSM
+router.get('/api/fos/place/:id', db.getFOSByPlaceID);
+router.get('/api/fos/place/:id/:buffer', db.getFOSByPlaceID);
+
+router.get('/api/fos/road/:id', db.getFOSByRoadID);
+router.get('/api/fos/road/:id/:buffer', db.getFOSByRoadID);
+
+// FOS
 router.get('/api/fos/:coords', db.getFOSByCoords);
-router.get('/api/fos/:coords/:radius', db.getFOSByCoords);
+router.get('/api/fos/:coords/:buffer', db.getFOSByCoords);
 
 router.get('/api/fos/line/:coords', db.getFOSByLineString);
-router.get('/api/fos/line/:coords/:radius', db.getFOSByLineString);
+router.get('/api/fos/line/:coords/:buffer', db.getFOSByLineString);
 
 
 //////////////
