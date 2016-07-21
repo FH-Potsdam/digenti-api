@@ -34,9 +34,16 @@ router.get('/api/fos/road/:id', db.getFOSByRoadID);
 router.get('/api/fos/road/:id/:buffer', db.getFOSByRoadID);
 
 // FOS
+
+// one point + buffer
 router.get('/api/fos/:coords', db.getFOSByCoords);
 router.get('/api/fos/:coords/:buffer', db.getFOSByCoords);
 
+// between 2 points + buffer
+router.get('/api/fos/points/:coords1/:coords2', db.getFOSByPoints);
+router.get('/api/fos/points/:coords1/:coords2/:buffer', db.getFOSByPoints);
+
+// linestring + buffer
 router.get('/api/fos/line/:coords', db.getFOSByLineString);
 router.get('/api/fos/line/:coords/:buffer', db.getFOSByLineString);
 

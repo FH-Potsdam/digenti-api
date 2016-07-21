@@ -10,6 +10,7 @@ var pgp = require('pg-promise')(options);
 var connectionString = 'postgres://' + config.db.host + ':' + config.db.port + '/' + config.db.name;
 var db = pgp(connectionString);
 
+var turf = require('turf');
 
 //////////////////////
 // PLACES Functions
@@ -243,6 +244,55 @@ function getFOSByCoords(req, res, next) {
         });
 }
 
+// api/fos/points/:coords1/:coords2/:buffer
+function getFOSByPoints(req, res, next) {
+    var coords1 = (req.params.coords1).split(","),
+        coords2 = (req.params.coords2).split(","),
+        buffer = (typeof req.params.buffer !== 'undefined') ? parseInt(req.params.buffer) : 100;
+
+    // Convert to Grads (0.01 = 1200m)
+    var bufferGrad = 0.01*(buffer/1200);
+
+    // Get line between two points
+    console.log("Get FOS values between point 1 (" + req.params.coords1 + ") and point 2 (" + req.params.coords2 + ") within buffer of " + buffer + " m");
+
+    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+             FROM (SELECT 'Feature' As type \
+                , row_to_json((SELECT l FROM (SELECT gid as id, dn as fos) As l \
+                  )) As properties \
+                , ST_AsGeoJSON(lg.geom)::json As geometry \
+               FROM ( \
+            		WITH polygons AS (SELECT \
+            		    1 AS gid, \
+            		    ST_Buffer(ST_SetSRID(ST_MakeLine(ST_MakePoint("+coords1[1]+","+coords1[0]+"), ST_MakePoint("+coords2[1]+","+coords2[0]+")), 4326), "+bufferGrad+", 'quad_segs=2') AS geom \
+            		) \
+            		SELECT \
+            		    p.gid AS uid, fos.gid AS gid, dn, \
+            		    fos.geom AS geom \
+            		FROM polygons AS p, colombia_fos_roi_h5_m0 AS fos \
+            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 3 \
+               ) As lg ) As f;")
+        .then(function (data) {
+            var fc = data[0];
+
+            // Add query properties
+            fc.properties = {
+                query: 'fos/points',
+                coords1: req.params.coords1,
+                coords2: req.params.coords2,
+                buffer: buffer,
+                intersection: 'yes'
+            };
+
+            // Response
+            res.status(200)
+                .json(fc);
+        })
+        .catch(function (err) {
+            return next(err);
+        });
+}
+
 // api/fos/line/:coords/:buffer
 function getFOSByLineString(req, res, next) {
     var coords = (req.params.coords).split(","),
@@ -305,5 +355,6 @@ module.exports = {
     getFOSByPlaceID: getFOSByPlaceID,
     getFOSByRoadID: getFOSByRoadID,
     getFOSByCoords: getFOSByCoords,
+    getFOSByPoints: getFOSByPoints,
     getFOSByLineString: getFOSByLineString
 };
