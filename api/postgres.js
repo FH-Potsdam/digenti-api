@@ -121,7 +121,7 @@ function getFOSByPlaceID(req, res, next) {
             		SELECT \
             		    p.gid AS uid, fos.gid AS gid, dn, \
             		    ST_Intersection(fos.geom, p.geom) AS geom \
-            		FROM polygons AS p, colombia_fos_roi_h5_m0 AS fos \
+            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
             		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
                ) As lg ) As f;")
         .then(function (data) {
@@ -167,7 +167,7 @@ function getFOSByRoadID(req, res, next) {
             		SELECT \
             		    p.gid AS uid, fos.gid AS gid, dn, \
             		    fos.geom AS geom \
-            		FROM polygons AS p, colombia_fos_roi_h5_m0 AS fos \
+            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
             		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
                ) As lg ) As f;")
         .then(function (data) {
@@ -195,7 +195,7 @@ function getFOSByRoadID(req, res, next) {
 // FOS Functions
 ///////////////////
 
-// api/fos/:coords/:buffer
+// api/fos/point/:coords/:buffer
 function getFOSByCoords(req, res, next) {
     var coords = (req.params.coords).split(","),
         buffer = (typeof req.params.buffer !== 'undefined') ? parseInt(req.params.buffer) : 1200;
@@ -221,7 +221,7 @@ function getFOSByCoords(req, res, next) {
             		SELECT \
             		    p.gid AS uid, fos.gid AS gid, dn, \
             		    ST_Intersection(fos.geom, p.geom) AS geom \
-            		FROM polygons AS p, colombia_fos_roi_h5_m0 AS fos \
+            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
             		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
                ) As lg ) As f;")
         .then(function (data) {
@@ -229,7 +229,7 @@ function getFOSByCoords(req, res, next) {
 
             // Add query properties
             fc.properties = {
-                query: 'fos',
+                query: 'fos/point',
                 coords: req.params.coords,
                 buffer: buffer,
                 intersection: 'yes'
@@ -255,7 +255,8 @@ function getFOSByPoints(req, res, next) {
 
     // Get line between two points
     console.log("Get FOS values between point 1 (" + req.params.coords1 + ") and point 2 (" + req.params.coords2 + ") within buffer of " + buffer + " m");
-
+    console.log("---------- FOS table: " + config.db.tables.fos);
+    
     db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
              FROM (SELECT 'Feature' As type \
                 , row_to_json((SELECT l FROM (SELECT gid as id, dn as fos) As l \
@@ -268,9 +269,9 @@ function getFOSByPoints(req, res, next) {
             		) \
             		SELECT \
             		    p.gid AS uid, fos.gid AS gid, dn, \
-            		    fos.geom AS geom \
-            		FROM polygons AS p, colombia_fos_roi_h5_m0 AS fos \
-            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 3 \
+            		    ST_Intersection(fos.geom, p.geom) AS geom \
+            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
                ) As lg ) As f;")
         .then(function (data) {
             var fc = data[0];
@@ -293,8 +294,19 @@ function getFOSByPoints(req, res, next) {
         });
 }
 
-// api/fos/line/:coords/:buffer
+// api/fos/linestring
 function getFOSByLineString(req, res, next) {
+
+    var feature = JSON.parse(req.query.data);
+
+    console.log("type:" + feature.type);
+
+    res.status(200)
+      .json(feature);
+}
+
+// api/fos/linestring/:coords/:buffer
+/*function getFOSByLineString(req, res, next) {
     var coords = (req.params.coords).split(","),
         buffer = (typeof req.params.buffer !== 'undefined') ? parseInt(req.params.buffer) : 100;
 
@@ -320,7 +332,7 @@ function getFOSByLineString(req, res, next) {
             		SELECT \
             		    p.gid AS uid, fos.gid AS gid, dn, \
             		    fos.geom AS geom \
-            		FROM polygons AS p, colombia_fos_roi_h5_m0 AS fos \
+            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
             		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
                ) As lg ) As f;")
         .then(function (data) {
@@ -341,7 +353,7 @@ function getFOSByLineString(req, res, next) {
         .catch(function (err) {
             return next(err);
         });
-}
+}*/
 
 /////////////
 // Exports
