@@ -1,41 +1,17 @@
 {
     "type": "Feature",
     "properties": {
-        "routeId": "AIQACAAAAB4AAAA/AAAAmAAAAKAAAAB42mNYwMDAwsQABJPtXnrz+he5M0DBL6FykTsCATYM//9DBD7sZ0ACXEB8fMm1N0wMnc+VfF7+K4BrZJlcJqLJgFej/ifXDkYGBia4IPONXJc5QJoxhYOFaQFjAtAUBoaGuKntDF4MALLTH5Tg8g9f",
+        "routeId": "AIQACAAAAB4AAAA/AAAAmgAAAKAAAAB42mNYwMDAwsQABJPtXnrz+he5M0DBL6FykTsCATYM//9DBD7sZ0ACXEB8fMm1N0wMnc+VfF7+K4BrZJlcJqLJgFej/ifXDkYGBia4IPONXJc5QJoxhYOFaQFjAtAUBoaGuKntDF4MALLTH5QwPz9c",
         "distance": 44631,
         "travelTime": 5179,
         "waypoints": [{
-            "linkId": "-798266412",
-            "mappedPosition": {
-                "latitude": 10.4717332,
-                "longitude": -73.2499002
-            },
-            "originalPosition": {
-                "latitude": 10.4716669,
-                "longitude": -73.2500001
-            },
-            "type": "stopOver",
-            "spot": 0.6923077,
-            "sideOfStreet": "right",
-            "mappedRoadName": "Carrera 13",
-            "label": "Carrera 13",
-            "shapeIndex": 0
+            "originalPosition": [-73.2500001, 10.4716669],
+            "mappedPosition": [-73.2499002, 10.4717332],
+            "distance": 13
         }, {
-            "linkId": "+1025666302",
-            "mappedPosition": {
-                "latitude": 10.4311967,
-                "longitude": -73.0008888
-            },
-            "originalPosition": {
-                "latitude": 10.4644542,
-                "longitude": -72.9332642
-            },
-            "type": "stopOver",
-            "spot": 1,
-            "sideOfStreet": "neither",
-            "mappedRoadName": "",
-            "label": "",
-            "shapeIndex": 392
+            "originalPosition": [-72.9332642, 10.4644542],
+            "mappedPosition": [-73.0008888, 10.4311967],
+            "distance": 8270
         }]
     },
     "geometry": {
