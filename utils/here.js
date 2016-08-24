@@ -39,13 +39,15 @@ here.processRouteResponse = function(res) {
         distance = res.response.route[0].summary.distance,
         travelTime = res.response.route[0].summary.travelTime;
 
-    var coordsArray = this.shapeToCoordinatesArray(res.response.route[0].shape);
+    var waypointsArray = this.processWaypoints(res.response.route[0].waypoint);
+        coordsArray = this.shapeToCoordinatesArray(res.response.route[0].shape);
 
     // Add properties
     var properties = {};
     properties['routeId'] = routeId;
     properties['distance'] = distance;
     properties['travelTime'] = travelTime;
+    properties['waypoints'] = waypointsArray;
 
     return turf.lineString(coordsArray, properties);
 }
@@ -54,6 +56,33 @@ here.processRouteResponse = function(res) {
 //////////////////
 // Format Utils
 //////////////////
+
+here.processWaypoints = function(waypointsArray) {
+
+    var formatedArray = [];
+
+    for (var i=0; i<waypointsArray.length; i++) {
+        var waypoint = {};
+
+        // Original and mapped position
+        var originalPosition = [waypointsArray[i].originalPosition.longitude, waypointsArray[i].originalPosition.latitude],
+            mappedPosition = [waypointsArray[i].mappedPosition.longitude, waypointsArray[i].mappedPosition.latitude];
+
+        waypoint["originalPosition"] = originalPosition;
+        waypoint["mappedPosition"] = mappedPosition;
+
+        // Calculate distance
+        var pt1 = turf.point(originalPosition),
+            pt2 = turf.point(mappedPosition);
+
+        var distance = turf.distance(pt1, pt2, 'kilometers');
+
+        waypoint["distance"] = parseInt(1000 * distance, 10);
+
+        formatedArray.push(waypoint);
+    }
+    return formatedArray;
+}
 
 here.shapeToCoordinatesArray = function(shape) {
 

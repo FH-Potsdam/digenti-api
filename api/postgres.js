@@ -256,7 +256,7 @@ function getFOSByPoints(req, res, next) {
     // Get line between two points
     console.log("Get FOS values between point 1 (" + req.params.coords1 + ") and point 2 (" + req.params.coords2 + ") within buffer of " + buffer + " m");
     console.log("---------- FOS table: " + config.db.tables.fos);
-    
+
     db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
              FROM (SELECT 'Feature' As type \
                 , row_to_json((SELECT l FROM (SELECT gid as id, dn as fos) As l \
