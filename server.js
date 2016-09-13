@@ -21,7 +21,8 @@ var app = express();
 app.use(logger(app.get("env") === "production" ? "combined" : "dev"));
 
 // parse application/json
-app.use(bodyParser.json());
+//app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -31,8 +32,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
     next();
 });
+
 
 
 //////////////////

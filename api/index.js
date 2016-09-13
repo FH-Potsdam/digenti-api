@@ -62,3 +62,14 @@ router.get('/api/isoline/:coords/:range', here.getIsoline);
 router.get('/api/route/:start/:end', here.calculateRoute);
 
 module.exports = router;
+
+
+
+
+//////////////
+// GEOPROCESSING API
+//////////////
+
+var geoprocessing = require('./geoprocessing');
+
+router.post('/api/geoprocessing/routeparts', geoprocessing.calculateRouteParts);
