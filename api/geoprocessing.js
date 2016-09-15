@@ -9,8 +9,8 @@ var utils = require('./../utils/index');
 var rp = require('request-promise');
 var unique = require('array-unique');
 var turf = require('turf');
-var lineString = require('turf-linestring');
-featureCollection = require('turf-featurecollection');
+// var lineString = require('turf-linestring');
+// var featureCollection = require('turf-featurecollection');
 var jsonfile = require('jsonfile');
 
 
@@ -157,12 +157,7 @@ function calculateKnotPoints(c) {
     unique(knotpoints);
 
     return knotpoints;
-
 }
-
-
-
-
 
 
 function splitRoutes(r, k) {
@@ -189,7 +184,6 @@ function splitRoutes(r, k) {
 
         for (var j = 1; j < first_element.length-1; j++) {
 
-
             if (!route_splitted) {
 
                 for (var i = 0; i < k.length; i++) {
@@ -199,16 +193,10 @@ function splitRoutes(r, k) {
                         splitting_point = j;
                         route_splitted = true;
                         console.log("Found Knotpoint on Route");
-
                     }
-
                 }
-
             }
-
         }
-
-
 
         if (route_splitted) {
 
@@ -241,14 +229,10 @@ function splitRoutes(r, k) {
         }
 
         queue.splice(0, 1);
-
     }
 
-
-
-
-    var linestrings = [];
-
+    // Create an array of features (LineString)
+    var lineStringArray = [];
     for (var i=0; i<result.length; i++) {
 
         var coords = [];
@@ -256,71 +240,60 @@ function splitRoutes(r, k) {
         console.log(result[i]["coords"]);
 
         for (var j=0; j<result[i]["coords"].length; j++) {
-
             coords[j] = [];
             coords[j][0] = result[i]["coords"][j][0];
             coords[j][1] = result[i]["coords"][j][1];
             coords[j][2] = result[i]["coords"][j][2];
-
         }
 
-        var linestring = lineString(coords, {
+        // Feature properties
+        var properties = {
             "importance-score": result[i]["counter"],
             "stroke-width": (result[i]["counter"]*0.5 + 2)
-        });
+        }
 
-        linestrings.push(linestring);
+        // Create linestring
+        var lineString = turf.lineString(coords, properties);
 
+        lineStringArray.push(lineString);
     }
 
-
-    var feature_collection = featureCollection(linestrings);
-
-
-//console.log("feature_collection");
-//console.log(feature_collection);
-
+    // Create a GeoJSON FeatureCollection based on the array of LineStrings
+    var featureCollection = turf.featureCollection(lineStringArray);
+    // var featureCollection = featureCollection(lineStringArray);
 
     var file = 'data.json';
 
-    jsonfile.writeFile(file, feature_collection, function (err) {
+    jsonfile.writeFile(file, featureCollection, function (err) {
         console.error(err)
     });
 
-    return feature_collection;
-
+    return featureCollection;
 }
-
-
-
-
 
 
 function arrayUnique(arr) {
 
-    var uniquearray = [];
+    var uniqueArray = [];
 
     for (var i=0; i<arr.length; i++) {
 
         var duplicate = false;
 
-        for (var j=0; j<uniquearray.length; j++) {
+        for (var j=0; j<uniqueArray.length; j++) {
 
-            //console.log("arr: " + arr[i].length + "     –     uniquearray: " + uniquearray[j]["coords"].length);
+            //console.log("arr: " + arr[i].length + "     –     uniqueArray: " + uniqueArray[j]["coords"].length);
 
-            if (arr[i].length === uniquearray[j]["coords"].length) {
+            if (arr[i].length === uniqueArray[j]["coords"].length) {
 
                 for (var k=0; k<arr[i].length; k++) {
-                    if ((arr[i][k][0] === uniquearray[j]["coords"][k][0]) && (arr[i][k][1] === uniquearray[j]["coords"][k][1]) && (arr[i][k][2] === uniquearray[j]["coords"][k][2])) {
+                    if ((arr[i][k][0] === uniqueArray[j]["coords"][k][0]) && (arr[i][k][1] === uniqueArray[j]["coords"][k][1]) && (arr[i][k][2] === uniqueArray[j]["coords"][k][2])) {
                         duplicate = true;
                     }
                 }
 
-                if (duplicate) { uniquearray[j]["counter"] = uniquearray[j]["counter"] + 1 ; }
-
+                if (duplicate) { uniqueArray[j]["counter"] = uniqueArray[j]["counter"] + 1 ; }
             }
-
-
         }
 
         console.log(i);
@@ -328,19 +301,14 @@ function arrayUnique(arr) {
             var a = [];
             a["coords"] = arr[i];
             a["counter"] = 1;
-            uniquearray.push(a);
+            uniqueArray.push(a);
         }
         console.log(i);
 
     }
 
-    return uniquearray;
-
+    return uniqueArray;
 }
-
-
-
-
 
 
 /////////////////////

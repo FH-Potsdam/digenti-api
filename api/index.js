@@ -47,7 +47,6 @@ router.get('/api/fos/points/:coords1/:coords2/:buffer', db.getFOSByPoints);
 router.get('/api/fos/linestring', db.getFOSByLineString);
 
 
-
 //////////////
 // HERE API
 //////////////
@@ -64,11 +63,9 @@ router.get('/api/route/:start/:end', here.calculateRoute);
 module.exports = router;
 
 
-
-
-//////////////
+///////////////////////
 // GEOPROCESSING API
-//////////////
+///////////////////////
 
 var geoprocessing = require('./geoprocessing');
 
