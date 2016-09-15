@@ -51,8 +51,13 @@ function getIsoline(req, res, next) {
 
     // Parse input params
     var center = (req.params.center) ? req.params.center : 'destination', // Coordinate as 'start' or 'destination'
-        coords = (req.params.coords).split(","),
-        range = parseInt(req.params.range)*60; // The range's unit is seconds
+        coords = (req.params.coords).split(",");
+
+    // In case of multiple values
+    var rangeArray = (req.params.range).split(",");
+
+    // The range's unit is seconds (input parameter in minutes)
+    var range = rangeArray.map(function(x) { return parseInt(x,10)*60; }).toString();
 
     // Query params
     var params = {};
@@ -76,6 +81,7 @@ function getIsoline(req, res, next) {
         .then(function (data) {
             res.status(200)
                 .json(utils.here.processIsolineResponse(data))
+                // .json(data)
                 // .json({
                 //     status: 'success',
                 //     data: data,

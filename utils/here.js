@@ -1,3 +1,7 @@
+////////////////
+// HERE Utils
+////////////////
+
 var here = {};
 var turf = require('turf');
 
@@ -8,23 +12,37 @@ var turf = require('turf');
 
 // Converts HERE isoline response to GeoJSON Polygon feature
 here.processIsolineResponse = function(res) {
-    var isoline = res.response.isoline[0];
 
-    var coordsArray = this.shapeToCoordinatesArray(isoline.component[0].shape);
+    var featuresArray = [];
 
-    // Add properties (for now in the returned format)
-    var properties = {
-        center: res.response.center
+    for (var i=0; i<res.response.isoline.length; i++) {
+
+        var isoline = res.response.isoline[i];
+
+        var coordsArray = this.shapeToCoordinatesArray(isoline.component[0].shape);
+
+        // Add properties (for now in the returned format)
+        var properties = {
+            range: parseInt(isoline.range,10) / 60, // Convert back to minutes
+            center: res.response.center
+        }
+
+        // Start / Destination
+        if (res.response.start) {
+            properties.start = res.response.start;
+        } else if (res.response.destination) {
+            properties.destination = res.response.destination;
+        }
+
+        // Create a polygon feature for each isoline and add it to an array of features
+        var polygon = turf.polygon([coordsArray], properties);
+        featuresArray.push(polygon);
     }
 
-    // Start / Destination
-    if (res.response.start) {
-        properties.start = res.response.start;
-    } else if (res.response.destination) {
-        properties.destination = res.response.destination;
-    }
+    // Create a GeoJSON FeatureCollection based on the array of LineStrings
+    var featureCollection = turf.featureCollection(featuresArray);
 
-    return turf.polygon([coordsArray], properties);
+    return featureCollection;
 }
 
 
