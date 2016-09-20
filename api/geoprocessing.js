@@ -219,7 +219,6 @@ function splitRoutes(r, k) {
 
             queue.push(part1);
             queue.push(part2);
-            //unique(queue);
 
         } else {
 
@@ -228,14 +227,9 @@ function splitRoutes(r, k) {
             }
 
             if (queue.length === 1) {
-                //console.log(result);
+
                 console.log("result.length: " + result.length);
                 result = arrayUnique(result);
-                console.log("result.length: " + result.length);
-                for (var u=0; u<result.length; u++) {
-                    //console.log(result[u].length);
-                    //console.log(result[u]);
-                }
 
             }
         }
@@ -310,10 +304,16 @@ function arrayUnique(arr) {
 
             if (arr[i].length === uniquearray[j]["coords"].length) {
 
+                var test = 0;
+
                 for (var k=0; k<arr[i].length; k++) {
                     if ((arr[i][k][0] === uniquearray[j]["coords"][k][0]) && (arr[i][k][1] === uniquearray[j]["coords"][k][1]) && (arr[i][k][2] === uniquearray[j]["coords"][k][2])) {
-                        duplicate = true;
+                        test++;
                     }
+                }
+
+                if (test === arr[i].length) {
+                    duplicate = true;
                 }
 
                 if (duplicate) { uniquearray[j]["counter"] = uniquearray[j]["counter"] + 1 ; }
