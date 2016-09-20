@@ -28,52 +28,6 @@ geoprocessing.getOverlappingGeometry = function(geometry1, geometry2) {
     return overlappingGeometry;
 }
 
-geoprocessing.compareRouteWithCollection = function(r, c) {
-
-    // there are several routes in the collection
-    if (c.length > 1) {
-
-        // there are existing routes -> for all existing routes
-        for (var i=0; i<c.length; i++) {
-
-            // current route is equal to current route in collection
-            if (r.id !== c[i].id) {
-
-                var overlappingRoute = this.getOverlappingGeometry(r.geometry, c[i].geometry);
-
-                if (overlappingRoute.length > 0) {
-
-                    var test = overlappingRoute.length.toString().concat(overlappingRoute[0][0].toString()).concat(overlappingRoute[0][1].toString());
-
-                    var overlappingRoute_exists = false;
-                    for (var k=0; j<overlappingRoutes.length; j++) {
-                        if (overlappingRoutes[j] === test) {
-                            overlappingRoute_exists = true;
-                            break;
-                        }
-                    }
-
-                    if (!overlappingRoute_exists) {
-
-                        overlappingRoutes.push(test);
-
-                        pushToKnotPoint(overlappingRoute[0]);
-                        pushToKnotPoint(overlappingRoute[overlappingRoute.length-1]);
-
-                        var feature = {};
-                        feature.type = "Feature";
-                        feature.geometry = {};
-                        feature.geometry.type = "LineString";
-                        feature.geometry.coordinates = overlappingRoute;
-                        feature.properties = {};
-                        resultingGEOJSON.features.push(feature);
-                    }
-                }
-            }
-        }
-    }
-}
-
 
 
 
