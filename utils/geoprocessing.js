@@ -8,7 +8,6 @@ var turf = require('turf');
 var unique = require('array-unique');
 var jsonfile = require('jsonfile');
 
-
 /////////////////////
 // ROUTE Functions
 /////////////////////
@@ -34,8 +33,7 @@ geoprocessing.compareRouteWithCollection = function(r, c) {
     // there are several routes in the collection
     if (c.length > 1) {
 
-        // there are existing routes
-        // for all existing routes
+        // there are existing routes -> for all existing routes
         for (var i=0; i<c.length; i++) {
 
             // current route is equal to current route in collection
@@ -43,7 +41,7 @@ geoprocessing.compareRouteWithCollection = function(r, c) {
 
                 var overlappingRoute = this.getOverlappingGeometry(r.geometry, c[i].geometry);
 
-                if (overlappingRoute.length>0) {
+                if (overlappingRoute.length > 0) {
 
                     var test = overlappingRoute.length.toString().concat(overlappingRoute[0][0].toString()).concat(overlappingRoute[0][1].toString());
 
@@ -91,16 +89,9 @@ geoprocessing.calculateKnotPoints = function(c) {
         // for all existing routes
         for (var i = 0; i < c.length; i++) {
 
-            //console.log();
-            //console.log(c[i]);
-
             for (var j = i; j < c.length; j++) {
 
-                //console.log(c[i].route.geometry.coordinates.length);
-
                 var overlappingRoute = this.getOverlappingGeometry(c[i].route.geometry.coordinates, c[j].route.geometry.coordinates);
-
-                //console.log(overlappingRoute);
 
                 if (overlappingRoute.length > 0) {
                     knotPoints.push(overlappingRoute[0]);
@@ -118,72 +109,71 @@ geoprocessing.calculateKnotPoints = function(c) {
 
 geoprocessing.splitRoutes = function(r, k) {
 
-    console.log("Start splitting routes.");
+    //console.log("Start splitting routes.");
 
-    var queue = [];
-    var result = [];
+    var queue = [];     // this one holds our queue with routes to be processed
+    var result = [];    // this one holds our result of unique route-parts in the end
 
+    // push the coordinates of all incoming routes to the queue
     for (var i=0; i < r.length; i++) {
         queue.push(r[i].route.geometry.coordinates);
     }
 
+    // queue not empty
     while (queue.length > 0) {
 
-        var first_element = queue[0];
+        // select the first queue-element as current
+        var current_element = queue[0];
 
-        //console.log(queue[0]);
-        //console.log();
-        //console.log("queue.length: " + queue.length);
-
-        var route_splitted = false;
+        // do not split the route by default
+        var split_route = false;
+        // this var holds the splitting_point
         var splitting_point = 0;
 
-        for (var j = 1; j < first_element.length-1; j++) {
 
-            if (!route_splitted) {
+        for (var j = 1; j < current_element.length-1; j++) {
+
+            if (!split_route) {
 
                 for (var i = 0; i < k.length; i++) {
 
-                    if (first_element[j].equals(k[i]) && !route_splitted) {
-
-                        splitting_point = j;
-                        route_splitted = true;
-                        console.log("Found Knotpoint on Route");
+                    if (current_element[j].equals(k[i]) && !split_route) {
+                        splitting_point = j;    // set the splitting_point (with current position)
+                        split_route = true;     // set bool split_route to force splitting
                     }
                 }
             }
         }
 
-        if (route_splitted) {
+        // route needs to be splitted
+        if (split_route) {
 
-            console.log("Split Route at point " + splitting_point);
+            // Split route on splitting_point
+            var part1 = current_element.slice(0, splitting_point+1);
+            var part2 = current_element.slice(splitting_point);
 
-            var part1 = first_element.slice(0, splitting_point+1);
-            var part2 = first_element.slice(splitting_point);
-
+            // push both parts into queue
             queue.push(part1);
             queue.push(part2);
-            //unique(queue);
 
+        // no need to split route
         } else {
 
-            if (first_element.length > 1) {
-                result.push(first_element);
-            }
+            // push the route to result-Array
+            if (current_element.length > 1) { result.push(current_element); }
 
+            // queue is empty – unique result-array
             if (queue.length === 1) {
-                //console.log(result);
-                console.log("result.length: " + result.length);
-                result = utils.array.arrayUnique(result);
-                console.log("result.length: " + result.length);
-                for (var u=0; u<result.length; u++) {
-                    //console.log(result[u].length);
-                    //console.log(result[u]);
-                }
+                //console.log("result.length: " + result.length);
+                // Make the array unique
+                result = this.transformArray(result);
+                //console.log("result.length: " + result.length);
             }
         }
 
+        // remove current_element from queue
         queue.splice(0, 1);
+
     }
 
     // Create an array of features (LineString)
@@ -192,8 +182,7 @@ geoprocessing.splitRoutes = function(r, k) {
 
         var coords = [];
 
-        console.log(result[i]["coords"]);
-
+        // copy values
         for (var j=0; j<result[i]["coords"].length; j++) {
             coords[j] = [];
             coords[j][0] = result[i]["coords"][j][0];
@@ -210,19 +199,76 @@ geoprocessing.splitRoutes = function(r, k) {
         // Create linestring
         var lineString = turf.lineString(coords, properties);
 
+        // push lineString to the array
         lineStringArray.push(lineString);
     }
 
     // Create a GeoJSON FeatureCollection based on the array of LineStrings
     var featureCollection = turf.featureCollection(lineStringArray);
 
+    // write featureCollection to a geojson-File for testing purposes
     var file = 'data.json';
+    jsonfile.writeFile(file, featureCollection, function (err) { console.error(err) });
 
-    jsonfile.writeFile(file, featureCollection, function (err) {
-        console.error(err)
-    });
-
+    // return our featureCollection
     return featureCollection;
+
 }
 
+
+
+// Array Unique
+geoprocessing.transformArray = function(arr) {
+
+    // this var holds the uniqueArray later
+    var uniqueArray = [];
+
+    // loop through input array
+    for (var i=0; i<arr.length; i++) {
+
+        // element is not a duplicate by default
+        var duplicate = false;
+
+        // loop through result array
+        for (var j=0; j<uniqueArray.length; j++) {
+
+            // length of the elements is equal -> check it more detailed
+            if (arr[i].length === uniqueArray[j]["coords"].length) {
+
+                // could be a duplicate, so set it to true
+                duplicate = true;
+
+                for (var k=0; k<arr[i].length; k++) {
+                    // If a part of a coord-point dont't equals, it is no duplicate
+                    if ((arr[i][k][0] !== uniqueArray[j]["coords"][k][0]) ||
+                        (arr[i][k][1] !== uniqueArray[j]["coords"][k][1]) ||
+                        (arr[i][k][2] !== uniqueArray[j]["coords"][k][2])
+                       ) { duplicate = false; } // no duplicate
+                }
+
+                // route part is duplicate -> raise its counter
+                if (duplicate) { uniqueArray[j]["counter"] = uniqueArray[j]["counter"] + 1 ; }
+            }
+        }
+
+        // no duplicate, push new entry to uniqueArray
+        if (!duplicate) {
+            var element = [];               // init
+            element["coords"] = arr[i];     // here are the coordinates
+            element["counter"] = 1;         // init counter var
+            uniqueArray.push(element);      // push
+        }
+
+    }
+
+    // return our uniqueArray
+    return uniqueArray;
+
+}
+
+
+
+
+
+// export geoprocessing
 module.exports = geoprocessing;

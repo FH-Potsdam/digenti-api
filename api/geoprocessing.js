@@ -22,21 +22,20 @@ function calculateRouteParts(req, res, next) {
     // Input Object to Array
     var arr = Object.keys(req.body).map(function (key) {return req.body[key]});
 
-    //console.log(arr);
-
+    // Calculate the Knotpoints (Points where Routeparts meet)
     var knotPoints = utils.geo.calculateKnotPoints(arr);
 
-    var result = utils.geo.splitRoutes(arr, knotPoints);
+    // calculate the routeparts
+    var routeParts = utils.geo.splitRoutes(arr, knotPoints);
 
-    //console.log(knotpoints);
-
+    // return result as json
     res.status(200)
-        //.json(utils.here.processRouteResponse(data))
         .json({
             status: 'success',
-            data: result,
-            message: 'Retrieved array of ' + result.length + ' items'
+            data: routeParts,
+            message: 'This is the array containing ' + routeParts.features.length + ' unique route parts'
         });
+
 }
 
 

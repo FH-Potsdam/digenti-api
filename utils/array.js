@@ -40,43 +40,4 @@ Object.defineProperty(Array.prototype, "equals", {enumerable: false});
 
 var array = {};
 
-// Array Unique
-array.arrayUnique = function(arr) {
-
-    var uniqueArray = [];
-
-    for (var i=0; i<arr.length; i++) {
-
-        var duplicate = false;
-
-        for (var j=0; j<uniqueArray.length; j++) {
-
-            //console.log("arr: " + arr[i].length + "     –     uniqueArray: " + uniqueArray[j]["coords"].length);
-
-            if (arr[i].length === uniqueArray[j]["coords"].length) {
-
-                for (var k=0; k<arr[i].length; k++) {
-                    if ((arr[i][k][0] === uniqueArray[j]["coords"][k][0]) && (arr[i][k][1] === uniqueArray[j]["coords"][k][1]) && (arr[i][k][2] === uniqueArray[j]["coords"][k][2])) {
-                        duplicate = true;
-                    }
-                }
-
-                if (duplicate) { uniqueArray[j]["counter"] = uniqueArray[j]["counter"] + 1 ; }
-            }
-        }
-
-        console.log(i);
-        if (!duplicate) {
-            var a = [];
-            a["coords"] = arr[i];
-            a["counter"] = 1;
-            uniqueArray.push(a);
-        }
-        console.log(i);
-
-    }
-
-    return uniqueArray;
-}
-
 module.exports = array;
