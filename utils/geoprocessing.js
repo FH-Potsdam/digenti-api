@@ -70,7 +70,12 @@ geoprocessing.splitRoutes = function(r, k) {
 
     // push the coordinates of all incoming routes to the queue
     for (var i=0; i < r.length; i++) {
-        queue.push(r[i].route.geometry.coordinates);
+        //console.log(r[i]);
+        var el = [];
+        el["id"] = [];
+        el["id"].push(r[i].route.id);
+        el["coordinates"] = r[i].route.geometry.coordinates;
+        queue.push(el);
     }
 
     // queue not empty
@@ -85,13 +90,13 @@ geoprocessing.splitRoutes = function(r, k) {
         var splitting_point = 0;
 
 
-        for (var j = 1; j < current_element.length-1; j++) {
+        for (var j = 1; j < current_element["coordinates"].length-1; j++) {
 
             if (!split_route) {
 
                 for (var i = 0; i < k.length; i++) {
 
-                    if (current_element[j].equals(k[i]) && !split_route) {
+                    if (current_element["coordinates"][j].equals(k[i]) && !split_route) {
                         splitting_point = j;    // set the splitting_point (with current position)
                         split_route = true;     // set bool split_route to force splitting
                     }
@@ -103,8 +108,13 @@ geoprocessing.splitRoutes = function(r, k) {
         if (split_route) {
 
             // Split route on splitting_point
-            var part1 = current_element.slice(0, splitting_point+1);
-            var part2 = current_element.slice(splitting_point);
+            var part1 = [];
+            part1["id"] = current_element["id"];
+            part1["coordinates"] = current_element["coordinates"].slice(0, splitting_point+1);
+
+            var part2 = [];
+            part2["id"] = current_element["id"];
+            part2["coordinates"] = current_element["coordinates"].slice(splitting_point);
 
             // push both parts into queue
             queue.push(part1);
@@ -114,12 +124,13 @@ geoprocessing.splitRoutes = function(r, k) {
         } else {
 
             // push the route to result-Array
-            if (current_element.length > 1) { result.push(current_element); }
+            if (current_element["coordinates"].length > 1) { result.push(current_element); }
 
             // queue is empty – unique result-array
             if (queue.length === 1) {
                 //console.log("result.length: " + result.length);
                 // Make the array unique
+                console.log("test");
                 result = this.transformArray(result);
                 //console.log("result.length: " + result.length);
             }
@@ -146,8 +157,9 @@ geoprocessing.splitRoutes = function(r, k) {
 
         // Feature properties
         var properties = {
-            "importance-score": result[i]["counter"],
-            "stroke-width": (result[i]["counter"]*0.5 + 2)
+            "id": result[i]["id"],
+            "importancescore": result[i]["counter"],
+            "strokewidth": (result[i]["counter"]*0.25 + 2)
         }
 
         // Create linestring
@@ -187,30 +199,34 @@ geoprocessing.transformArray = function(arr) {
         for (var j=0; j<uniqueArray.length; j++) {
 
             // length of the elements is equal -> check it more detailed
-            if (arr[i].length === uniqueArray[j]["coords"].length) {
+            if (arr[i]["coordinates"].length === uniqueArray[j]["coords"].length) {
 
                 // could be a duplicate, so set it to true
                 duplicate = true;
 
-                for (var k=0; k<arr[i].length; k++) {
+                for (var k=0; k<arr[i]["coordinates"].length; k++) {
                     // If a part of a coord-point dont't equals, it is no duplicate
-                    if ((arr[i][k][0] !== uniqueArray[j]["coords"][k][0]) ||
-                        (arr[i][k][1] !== uniqueArray[j]["coords"][k][1]) ||
-                        (arr[i][k][2] !== uniqueArray[j]["coords"][k][2])
+                    if ((arr[i]["coordinates"][k][0] !== uniqueArray[j]["coords"][k][0]) ||
+                        (arr[i]["coordinates"][k][1] !== uniqueArray[j]["coords"][k][1]) ||
+                        (arr[i]["coordinates"][k][2] !== uniqueArray[j]["coords"][k][2])
                        ) { duplicate = false; } // no duplicate
                 }
 
                 // route part is duplicate -> raise its counter
-                if (duplicate) { uniqueArray[j]["counter"] = uniqueArray[j]["counter"] + 1 ; }
+                if (duplicate) {
+                    uniqueArray[j]["counter"] = uniqueArray[j]["counter"] + 1 ;
+                    uniqueArray[j]["id"] = uniqueArray[j]["id"].concat(arr[i]["id"]);
+                }
             }
         }
 
         // no duplicate, push new entry to uniqueArray
         if (!duplicate) {
-            var element = [];               // init
-            element["coords"] = arr[i];     // here are the coordinates
-            element["counter"] = 1;         // init counter var
-            uniqueArray.push(element);      // push
+            var element = [];                           // init
+            element["coords"] = arr[i]["coordinates"];  // here are the coordinates
+            element["counter"] = 1;                     // init counter var
+            element["id"] = arr[i]["id"];               // init counter var
+            uniqueArray.push(element);                  // push
         }
 
     }
