@@ -17,4 +17,9 @@ config.here.route_base = 'https://route.cit.api.here.com/routing/7.2/calculatero
 config.here.app_id = 'YOUR_APP_ID';
 config.here.app_code = 'YOUR_APP_CODE';
 
+// Cache Settings
+config.cache = {};
+config.cache.dir = 'cache';
+config.cache.duration = 1000*60*60*24;  // 1 Day
+
 module.exports = config;

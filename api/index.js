@@ -59,6 +59,8 @@ router.get('/api/isoline/:coords/:range', here.getIsoline);
 
 // Routes
 router.get('/api/route/:start/:end', here.calculateRoute);
+//router.get('/api/routes/:start/:end', here.calculateRoute);
+//router.post('/api/routes/onetomany/:start/', here.calculateRoute);
 
 module.exports = router;
 

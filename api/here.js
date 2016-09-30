@@ -8,7 +8,10 @@
 var config = require('./../config');
 var utils = require('./../utils/index');
 var rp = require('request-promise');
-
+var jsonfile = require('jsonfile');
+var fs = require('fs');
+var util = require('util');
+var fileExists = require('file-exists');
 
 ///////////////////////
 // Query Parameters
@@ -64,33 +67,50 @@ function getIsoline(req, res, next) {
     params[center] = 'geo!'+coords[0]+','+coords[1];
     params['range'] = range;
 
-    // Merge with defaults
-    var query = Object.assign({}, appParams, isolineParams, params);
+    // Define filename of cached file
+    var filename = params[center] + '_' + params['range'] + '.json';
 
-    console.log("Isoline requested with params: " + JSON.stringify(query));
+    // get cached file
+    var file = utils.cache.getCacheFile("isoline", filename);
 
-    // Request
-    var options = {
-        method: 'GET',
-        uri: config.here.isoline_base,
-        qs: query,
-        json: true
-    };
+    if (utils.cache.checkCacheValidity(file)) {
+        // cache still valid
 
-    rp(options)
-        .then(function (data) {
-            res.status(200)
-                .json(utils.here.processIsolineResponse(data))
-                // .json(data)
-                // .json({
-                //     status: 'success',
-                //     data: data,
-                //     message: 'Retrieved ONE isoline'
-                // });
-        })
-        .catch(function (err) {
-            return next(err);
+        fs.readFile(file, function read(err, data) {
+            if (err) { throw err; }
+            var jsonContent = JSON.parse(data);
+            res.status(200).json(jsonContent)
         });
+
+    } else {
+        // cache expired
+
+        // Merge with defaults
+        var query = Object.assign({}, appParams, isolineParams, params);
+
+        console.log("Isoline requested with params: " + JSON.stringify(query));
+
+        // Request
+        var options = {
+            method: 'GET',
+            uri: config.here.isoline_base,
+            qs: query,
+            json: true
+        };
+
+        rp(options)
+            .then(function (data) {
+                // calculate JSON for isoline
+                var response = utils.here.processIsolineResponse(data);
+                // cache isoline JSON
+                utils.cache.writeCacheFile(file, response);
+                res.status(200).json(response)
+            })
+            .catch(function (err) {
+                return next(err);
+            });
+    }
+
 }
 
 
@@ -109,40 +129,78 @@ function calculateRoute(req, res, next) {
     params['waypoint0'] = 'geo!'+start[0]+','+start[1];
     params['waypoint1'] = 'geo!'+end[0]+','+end[1];
 
-    // Merge with defaults
-    var query = Object.assign({}, appParams, routeParams, params);
+    // Define filename of cached file
+    var filename = params['waypoint0'] + '_' + params['waypoint1'] + '.json';
 
-    console.log("Route calculation requested with params: " + JSON.stringify(query));
+    // get cached file
+    var file = utils.cache.getCacheFile("route", filename);
 
-    // Request
-    var options = {
-        method: 'GET',
-        uri: config.here.route_base,
-        qs: query,
-        json: true
-    };
+    if (utils.cache.checkCacheValidity(file)) {
+        // cache still valid
 
-    // res.status(200)
-    //   .json({
-    //     status: 'success',
-    //     data: options,
-    //     message: 'calculate route'
-    //   });
-
-    rp(options)
-        .then(function (data) {
-            res.status(200)
-                .json(utils.here.processRouteResponse(data))
-                // .json({
-                //     status: 'success',
-                //     data: data,
-                //     message: 'Retrieved ONE isoline'
-                // });
-        })
-        .catch(function (err) {
-            return next(err);
+        fs.readFile(file, function read(err, data) {
+            if (err) { throw err; }
+            var jsonContent = JSON.parse(data);
+            res.status(200).json(jsonContent)
         });
+
+    } else {
+        // cache expired
+
+        // Merge with defaults
+        var query = Object.assign({}, appParams, routeParams, params);
+
+        //console.log("Route calculation requested with params: " + JSON.stringify(query));
+
+        // Request
+        var options = {
+            method: 'GET',
+            uri: config.here.route_base,
+            qs: query,
+            json: true
+        };
+
+        rp(options)
+            .then(function (data) {
+                // calculate JSON for route
+                var response = utils.here.processRouteResponse(data, params);
+                // cache route JSON
+                utils.cache.writeCacheFile(file, response);
+                res.status(200).json(response)
+            })
+            .catch(function (err) {
+                return next(err);
+            });
+
+    }
+
+
+
 }
+
+
+
+
+function calculateRoutes(req, res, next) {
+
+    // Input Object to Array
+    console.log(req.body);
+    console.log(req.paramrs.start);
+
+    var routes = "These are really great routes.";
+
+    // return result as json
+    res.status(200)
+        .json({
+            status: 'success',
+            data: routes,
+            message: 'You just received the best routes ever!'
+        });
+
+}
+
+
+
 
 
 /////////////
@@ -151,5 +209,6 @@ function calculateRoute(req, res, next) {
 
 module.exports = {
     getIsoline: getIsoline,
-    calculateRoute: calculateRoute
+    calculateRoute: calculateRoute,
+    calculateRoutes: calculateRoutes
 };

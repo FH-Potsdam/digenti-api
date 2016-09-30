@@ -4,6 +4,9 @@
 
 var here = {};
 var turf = require('turf');
+var jsonfile = require('jsonfile');
+var fs = require('fs');
+var util = require('util');
 
 
 ///////////////////
@@ -51,7 +54,7 @@ here.processIsolineResponse = function(res) {
 /////////////////
 
 // Converts HERE route response to GeoJSON Polygon feature
-here.processRouteResponse = function(res) {
+here.processRouteResponse = function(res, params) {
 
     var routeId = res.response.route[0].routeId,
         distance = res.response.route[0].summary.distance,
@@ -60,14 +63,17 @@ here.processRouteResponse = function(res) {
     var waypointsArray = this.processWaypoints(res.response.route[0].waypoint);
         coordsArray = this.shapeToCoordinatesArray(res.response.route[0].shape);
 
-    // Add properties
     var properties = {};
     properties['routeId'] = routeId;
     properties['distance'] = distance;
     properties['travelTime'] = travelTime;
     properties['waypoints'] = waypointsArray;
 
-    return turf.lineString(coordsArray, properties);
+    var linestring = turf.lineString(coordsArray, properties);
+
+    return linestring;
+
+
 }
 
 

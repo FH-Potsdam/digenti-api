@@ -12,4 +12,8 @@ utils.here = here;
 var geo = require('./geoprocessing');
 utils.geo = geo;
 
+// cache utils
+var cache = require('./cache');
+utils.cache = cache;
+
 module.exports = utils;
