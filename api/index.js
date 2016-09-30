@@ -44,7 +44,26 @@ router.get('/api/fos/points/:coords1/:coords2', db.getFOSByPoints);
 router.get('/api/fos/points/:coords1/:coords2/:buffer', db.getFOSByPoints);
 
 // linestring + buffer
-router.get('/api/fos/linestring', db.getFOSByLineString);
+// router.get('/api/fos/linestring', db.getFOSByLineString);
+
+// Special Areas (NDVI - Gradient)
+
+// OSM place + buffer
+router.get('/api/specialareas/:ndvi/:gradient/place/:id', db.getSpecialAreasByPlaceID);
+router.get('/api/specialareas/:ndvi/:gradient/place/:id/:buffer', db.getSpecialAreasByPlaceID);
+
+// OSM road + buffer
+router.get('/api/specialareas/:ndvi/:gradient/road/:id', db.getSpecialAreasByRoadID);
+router.get('/api/specialareas/:ndvi/:gradient/road/:id/:buffer', db.getSpecialAreasByRoadID);
+
+// one point + buffer
+router.get('/api/specialareas/:ndvi/:gradient/point/:coords', db.getSpecialAreasByCoords);
+router.get('/api/specialareas/:ndvi/:gradient/point/:coords/:buffer', db.getSpecialAreasByCoords);
+
+// between 2 points + buffer
+router.get('/api/specialareas/:ndvi/:gradient/points/:coords1/:coords2', db.getSpecialAreasByPoints);
+router.get('/api/specialareas/:ndvi/:gradient/points/:coords1/:coords2/:buffer', db.getSpecialAreasByPoints);
+
 
 
 //////////////

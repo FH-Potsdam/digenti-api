@@ -12,4 +12,8 @@ utils.here = here;
 var geo = require('./geoprocessing');
 utils.geo = geo;
 
+// Strings
+var strings = require('./strings');
+utils.strings = strings;
+
 module.exports = utils;
