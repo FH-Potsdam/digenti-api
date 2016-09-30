@@ -16,4 +16,8 @@ utils.geo = geo;
 var cache = require('./cache');
 utils.cache = cache;
 
+// Strings
+var strings = require('./strings');
+utils.strings = strings;
+
 module.exports = utils;
