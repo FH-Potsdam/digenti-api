@@ -34,7 +34,6 @@ cache.checkCacheValidity = function (file) {
     } else { useCache = false; } // there is no file > do not use cache
 
     return useCache;
-
 }
 
 // get file from cache (by subdir and filename)

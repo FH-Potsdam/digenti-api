@@ -1,6 +1,6 @@
-//////////////
+///////////////////////
 // Geoprocessing API
-//////////////
+///////////////////////
 
 var config = require('./../config');
 var utils = require('./../utils/index');

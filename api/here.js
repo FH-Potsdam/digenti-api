@@ -134,6 +134,8 @@ function calculateRoute(req, res, next) {
     // get cached file
     var file = utils.cache.getCacheFile("route", filename);
 
+    console.log("File: " + file);
+
     if (utils.cache.checkCacheValidity(file)) {
         // cache still valid
 
@@ -149,7 +151,7 @@ function calculateRoute(req, res, next) {
         // Merge with defaults
         var query = Object.assign({}, appParams, routeParams, params);
 
-        //console.log("Route calculation requested with params: " + JSON.stringify(query));
+        console.log("Route calculation requested with params: " + JSON.stringify(query));
 
         // Request
         var options = {
@@ -170,11 +172,7 @@ function calculateRoute(req, res, next) {
             .catch(function (err) {
                 return next(err);
             });
-
     }
-
-
-
 }
 
 
