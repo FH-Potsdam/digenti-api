@@ -8,7 +8,6 @@
 var config = require('./../config');
 var utils = require('./../utils/index');
 var rp = require('request-promise');
-var jsonfile = require('jsonfile');
 var fs = require('fs');
 var util = require('util');
 var fileExists = require('file-exists');
@@ -88,7 +87,7 @@ function getIsoline(req, res, next) {
         // Merge with defaults
         var query = Object.assign({}, appParams, isolineParams, params);
 
-        console.log("Isoline requested with params: " + JSON.stringify(query));
+        //console.log("Isoline requested with params: " + JSON.stringify(query));
 
         // Request
         var options = {
@@ -184,8 +183,8 @@ function calculateRoute(req, res, next) {
 function calculateRoutes(req, res, next) {
 
     // Input Object to Array
-    console.log(req.body);
-    console.log(req.paramrs.start);
+    //console.log(req.body);
+    //console.log(req.paramrs.start);
 
     var routes = "These are really great routes.";
 

@@ -130,7 +130,6 @@ geoprocessing.splitRoutes = function(r, k) {
             if (queue.length === 1) {
                 //console.log("result.length: " + result.length);
                 // Make the array unique
-                console.log("test");
                 result = this.transformArray(result);
                 //console.log("result.length: " + result.length);
             }

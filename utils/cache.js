@@ -3,6 +3,7 @@ var fs = require('fs');
 var util = require('util');
 var config = require('./../config');
 var fileExists = require('file-exists');
+var jsonfile = require('jsonfile');
 
 // Check if cache-dir (defined in config.cache.dir) exists > if no: create it
 cache.checkAndCreateCacheDir = function () {
@@ -45,7 +46,7 @@ cache.getCacheFile = function (subdir, filename) {
 
 // wirte data in cache file
 cache.writeCacheFile = function (file, data) {
-    jsonfile.writeFile(file, routeParts, function (err) {
+    jsonfile.writeFile(file, data, function (err) {
         console.error(err)
     });
 }
