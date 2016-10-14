@@ -11,6 +11,7 @@ var rp = require('request-promise');
 var fs = require('fs');
 var util = require('util');
 var fileExists = require('file-exists');
+var turf = require('turf');
 
 ///////////////////////
 // Query Parameters
@@ -101,6 +102,9 @@ function getIsoline(req, res, next) {
             .then(function (data) {
                 // calculate JSON for isoline
                 var response = utils.here.processIsolineResponse(data);
+
+                response = turf.simplify(response, config.simplify.tolerance.isoline, true);
+
                 // cache isoline JSON
                 utils.cache.writeCacheFile(file, response);
                 res.status(200).json(response)
@@ -163,6 +167,7 @@ function calculateRoute(req, res, next) {
             .then(function (data) {
                 // calculate JSON for route
                 var response = utils.here.processRouteResponse(data, params);
+
                 // cache route JSON
                 utils.cache.writeCacheFile(file, response);
                 res.status(200).json(response)

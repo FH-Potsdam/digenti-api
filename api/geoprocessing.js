@@ -50,6 +50,10 @@ function calculateRouteParts(req, res, next) {
         // calculate the routeparts
         var routeParts = utils.geo.splitRoutes(arr, knotPoints);
 
+        for (i = 0; i < routeParts.features.length; i++) {
+            routeParts.features[i] = turf.simplify(routeParts.features[i], config.simplify.tolerance.route, true);
+        }
+
         // cache routeparts JSON
         utils.cache.writeCacheFile(file, routeParts);
 
