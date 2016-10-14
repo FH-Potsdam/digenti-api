@@ -24,6 +24,8 @@ config.cache.duration = 1000*60*60*24;  // 1 Day
 
 // Tolerance for Simplification
 config.simplify = {};
-config.simplify.tolerance = 0.0005;
+config.simplify.tolerance = {};
+config.simplify.tolerance.route = 0.0005;
+config.simplify.tolerance.isoline = 0.001;
 
 module.exports = config;
