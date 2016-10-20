@@ -116,15 +116,17 @@ function getFOSByPlaceID(req, res, next) {
                   )) As properties \
                 , ST_AsGeoJSON(lg.geom)::json As geometry \
                FROM (	 \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE osm_id = '"+placeID+"' LIMIT 1), 4326), "+bufferGrad+") AS geom \
-            		) \
-            		SELECT \
-            		    p.gid AS uid, fos.gid AS gid, dn, \
-            		    ST_Intersection(fos.geom, p.geom) AS geom \
-            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
-            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                   SELECT gid, dn, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE osm_id = '"+placeID+"' LIMIT 1), 4326), "+bufferGrad+") AS geom \
+                		) \
+                		SELECT \
+                		    p.gid AS uid, fos.gid AS gid, dn, \
+                		    ST_Intersection(fos.geom, p.geom) AS geom \
+                		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+                		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                    ) As sp \
                ) As lg ) As f;")
         .then(function (data) {
             var fc = data[0];
@@ -216,15 +218,17 @@ function getFOSByCoords(req, res, next) {
                   )) As properties \
                 , ST_AsGeoJSON(lg.geom)::json As geometry \
                FROM (	 \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID(ST_GeomFromText('"+point+"'), 4326), "+bufferGrad+") AS geom \
-            		) \
-            		SELECT \
-            		    p.gid AS uid, fos.gid AS gid, dn, \
-            		    ST_Intersection(fos.geom, p.geom) AS geom \
-            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
-            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                   SELECT gid, dn, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_Buffer(ST_SetSRID(ST_GeomFromText('"+point+"'), 4326), "+bufferGrad+") AS geom \
+                		) \
+                		SELECT \
+                		    p.gid AS uid, fos.gid AS gid, dn, \
+                		    ST_Intersection(fos.geom, p.geom) AS geom \
+                		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+                		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                   ) As sp \
                ) As lg ) As f;")
         .then(function (data) {
             var fc = data[0];
@@ -265,15 +269,17 @@ function getFOSByPoints(req, res, next) {
                   )) As properties \
                 , ST_AsGeoJSON(lg.geom)::json As geometry \
                FROM ( \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID(ST_MakeLine(ST_MakePoint("+coords1[1]+","+coords1[0]+"), ST_MakePoint("+coords2[1]+","+coords2[0]+")), 4326), "+bufferGrad+", 'quad_segs=2') AS geom \
-            		) \
-            		SELECT \
-            		    p.gid AS uid, fos.gid AS gid, dn, \
-            		    ST_Intersection(fos.geom, p.geom) AS geom \
-            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
-            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                   SELECT gid, dn, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_Buffer(ST_SetSRID(ST_MakeLine(ST_MakePoint("+coords1[1]+","+coords1[0]+"), ST_MakePoint("+coords2[1]+","+coords2[0]+")), 4326), "+bufferGrad+", 'quad_segs=2') AS geom \
+                		) \
+                		SELECT \
+                		    p.gid AS uid, fos.gid AS gid, dn, \
+                		    ST_Intersection(fos.geom, p.geom) AS geom \
+                		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+                		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                    ) As sp \
                ) As lg ) As f;")
         .then(function (data) {
             var fc = data[0];
@@ -334,15 +340,17 @@ function getSpecialAreasByPlaceID(req, res, next) {
                   )) As properties \
                 , ST_AsGeoJSON(lg.geom)::json As geometry \
                FROM (	 \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE osm_id = '"+placeID+"' LIMIT 1), 4326), "+bufferGrad+") AS geom \
-            		) \
-            		SELECT DISTINCT \
-                        area.ndvi AS ndvi, area.gradient AS gradient, \
-            		    ST_Intersection(p.geom, area.geom) AS geom \
-            		FROM polygons AS p, " + config.db.tables.specialareas + " AS area \
-            		WHERE ST_Intersects(p.geom, area.geom) AND area.ndvi <= " + ndvi + " AND area.gradient <= " + gradient + " \
+                   SELECT ndvi, gradient, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE osm_id = '"+placeID+"' LIMIT 1), 4326), "+bufferGrad+") AS geom \
+                		) \
+                		SELECT DISTINCT \
+                            area.ndvi AS ndvi, area.gradient AS gradient, \
+                		    ST_Intersection(p.geom, area.geom) AS geom \
+                		FROM polygons AS p, " + config.db.tables.specialareas + " AS area \
+                		WHERE ST_Intersects(p.geom, area.geom) AND area.ndvi <= " + ndvi + " AND area.gradient <= " + gradient + " \
+                    ) As sp \
                ) As lg ) As f;")
         .then(function (data) {
             var fc = data[0];
@@ -446,15 +454,17 @@ function getSpecialAreasByCoords(req, res, next) {
                   )) As properties \
                 , ST_AsGeoJSON(lg.geom)::json As geometry \
                FROM (	 \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID(ST_GeomFromText('"+point+"'), 4326), "+bufferGrad+") AS geom \
-            		) \
-            		SELECT DISTINCT \
-                        area.ndvi AS ndvi, area.gradient AS gradient, \
-            		    ST_Intersection(p.geom, area.geom) AS geom \
-            		FROM polygons AS p, " + config.db.tables.specialareas + " AS area \
-            		WHERE ST_Intersects(p.geom, area.geom) AND area.ndvi <= " + ndvi + " AND area.gradient <= " + gradient + " \
+                   SELECT ndvi, gradient, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_Buffer(ST_SetSRID(ST_GeomFromText('"+point+"'), 4326), "+bufferGrad+") AS geom \
+                		) \
+                		SELECT DISTINCT \
+                            area.ndvi AS ndvi, area.gradient AS gradient, \
+                		    ST_Intersection(p.geom, area.geom) AS geom \
+                		FROM polygons AS p, " + config.db.tables.specialareas + " AS area \
+                		WHERE ST_Intersects(p.geom, area.geom) AND area.ndvi <= " + ndvi + " AND area.gradient <= " + gradient + " \
+                    ) As sp \
                ) As lg ) As f;")
         .then(function (data) {
             var fc = data[0];
@@ -494,22 +504,23 @@ function getSpecialAreasByPoints(req, res, next) {
     console.log("Get Special Areas values between point 1 (" + req.params.coords1 + ") and point 2 (" + req.params.coords2 + ") within buffer of " + buffer + " m");
     console.log("  -- NDVI threshold: (" + ndvi + ") " + utils.strings.ndvi[ndvi-1] + ", Gradient threshold: (" + gradient + ") " + utils.strings.gradient[gradient-1]);
 
-
     db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
              FROM (SELECT 'Feature' As type \
                 , row_to_json((SELECT l FROM (SELECT ndvi, gradient) As l \
                   )) As properties \
                 , ST_AsGeoJSON(lg.geom)::json As geometry \
                FROM (	 \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID(ST_MakeLine(ST_MakePoint("+coords1[1]+","+coords1[0]+"), ST_MakePoint("+coords2[1]+","+coords2[0]+")), 4326), "+bufferGrad+", 'quad_segs=2') AS geom \
-            		) \
-            		SELECT DISTINCT \
-                        area.ndvi AS ndvi, area.gradient AS gradient, \
-            		    ST_Intersection(p.geom, area.geom) AS geom \
-            		FROM polygons AS p, " + config.db.tables.specialareas + " AS area \
-            		WHERE ST_Intersects(p.geom, area.geom) AND area.ndvi <= " + ndvi + " AND area.gradient <= " + gradient + " \
+                    SELECT ndvi, gradient, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_Buffer(ST_SetSRID(ST_MakeLine(ST_MakePoint("+coords1[1]+","+coords1[0]+"), ST_MakePoint("+coords2[1]+","+coords2[0]+")), 4326), "+bufferGrad+", 'quad_segs=2') AS geom \
+                		) \
+                		SELECT DISTINCT \
+                            area.ndvi AS ndvi, area.gradient AS gradient, \
+                		    ST_Intersection(p.geom, area.geom) AS geom \
+                		FROM polygons AS p, " + config.db.tables.specialareas + " AS area \
+                		WHERE ST_Intersects(p.geom, area.geom) AND area.ndvi <= " + ndvi + " AND area.gradient <= " + gradient + " \
+                    ) As sp \
                ) As lg ) As f;")
         .then(function (data) {
             var fc = data[0];
