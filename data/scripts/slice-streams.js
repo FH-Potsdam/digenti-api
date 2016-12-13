@@ -8,6 +8,8 @@ var jsonexport = require('jsonexport');
 // open the input json-file
 var inputJSON = require('../streams_aoi');
 
+var removeDuplicates = true;
+
 // this array holds the points
 var points = [];
 
@@ -19,9 +21,9 @@ for (var i=0; i<inputJSON.features.length; i++) {
 
     // properties for the point
     var props = {};
-    props.streamorder = line.properties.streamorder.toString();
-    props.streamID = line.properties.IX.toString();
-    props.followingStreamID = Math.round(line.properties.tribtoIX).toString();
+    props.streamorder = line.properties.streamorder;
+    props.streamID = [line.properties.IX];
+    props.followingStreamID = Math.round(line.properties.tribtoIX);
 
     // create a featureCollection with the lineChunks
     var lineChunks = turf.lineChunk(line, 1.0, 'kilometers');
@@ -29,12 +31,15 @@ for (var i=0; i<inputJSON.features.length; i++) {
     // array with the coords of all points
     var pointCoords = [];
 
+    //console.log(lineChunks.features[lineChunks.features.length-1]);
+
     // push startpoint of first chunk
-    pointCoords.push(lineChunks.features[0].geometry.coordinates[0]);
+    //pointCoords.push(lineChunks.features[0].geometry.coordinates[0]);
     // push endpoint of all chunks
     for (var j=0; j<lineChunks.features.length; j++) {
         pointCoords.push(lineChunks.features[j].geometry.coordinates[0]);
     }
+    pointCoords.push(lineChunks.features[lineChunks.features.length-1].geometry.coordinates[lineChunks.features[lineChunks.features.length-1].geometry.coordinates.length-1]);
 
     // loop through the lineChunks
     for (var j=0; j<pointCoords.length; j++) {
@@ -53,6 +58,27 @@ for (var i=0; i<inputJSON.features.length; i++) {
 
     }
 }
+
+
+
+if (removeDuplicates) {
+
+    for (var i=0; i<points.length; i++) {
+        for (var j=i+1; j<points.length; j++) {
+            if ((points[i].geometry.coordinates[0] === points[j].geometry.coordinates[0]) && (points[i].geometry.coordinates[1] === points[j].geometry.coordinates[1])) {
+                if (points[i].properties.streamorder > points[j].properties.streamorder) {
+                    points[i].properties.streamID = points[i].properties.streamID.concat(points[j].properties.streamID);
+                    points.splice(j, 1);
+                } else if (points[i].properties.streamorder < points[j].properties.streamorder) {
+                    points[j].properties.streamID = points[j].properties.streamID.concat(points[i].properties.streamID);
+                    points.splice(i, 1);
+                }
+            }
+        }
+    }
+
+}
+
 
 // make a featureCollection with the points
 var feature_collection = turf.featurecollection(points);
