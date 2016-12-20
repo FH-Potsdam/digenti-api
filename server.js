@@ -58,8 +58,8 @@ app.listen(app.get("port"), function () {
     console.log('DIGENTI REST API listening on port ' + app.get("port"));
     console.log('*****************************************' + '\n');
 
-    console.log("-- FOS table: " + config.db.tables.fos);
-    console.log("-- Special Areas table: " + config.db.tables.specialareas);
+    //console.log("-- FOS table: " + config.db.tables.fos);
+    //console.log("-- Special Areas table: " + config.db.tables.specialareas);
     console.log("");
 });
 

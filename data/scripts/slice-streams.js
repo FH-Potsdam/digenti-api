@@ -8,6 +8,7 @@ var jsonexport = require('jsonexport');
 // open the input json-file
 var inputJSON = require('../streams_aoi');
 
+// Want to remove Duplicates?
 var removeDuplicates = true;
 
 // this array holds the points
@@ -60,7 +61,7 @@ for (var i=0; i<inputJSON.features.length; i++) {
 }
 
 
-
+// Removes duplicates at intersections
 if (removeDuplicates) {
 
     for (var i=0; i<points.length; i++) {
