@@ -1,6 +1,7 @@
 var config = require('./../config');
 var utils = require('./../utils/index');
 var promise = require('bluebird');
+var turf = require('turf');
 
 var options = {
   // Initialization Options
@@ -13,9 +14,10 @@ var db = pgp(connectionString);
 
 var turf = require('turf');
 
-//////////////////////
-// PLACES Functions
-//////////////////////
+
+///////////////////
+// OSM Functions
+///////////////////
 
 // api/places
 function getAllPlaces(req, res, next) {
@@ -54,10 +56,6 @@ function getPlace(req, res, next) {
 }
 
 
-//////////////////////
-// ROADS Functions
-//////////////////////
-
 // api/roads
 function getAllRoads(req, res, next) {
     db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
@@ -95,99 +93,62 @@ function getRoad(req, res, next) {
 }
 
 
-////////////////////////////////////
-// FOS Functions for OSM Features
-////////////////////////////////////
+//////////////////////////
+// Elevation Functions
+//////////////////////////
 
-// api/fos/place/:id/:buffer
-function getFOSByPlaceID(req, res, next) {
-    // var placeID = parseInt(req.params.id),
-    var placeID = req.params.id,
-        buffer = (typeof req.params.buffer !== 'undefined') ? parseInt(req.params.buffer) : 1200;
+// api/elevation/point/:coords/
+function getElevationByCoords(req, res, next) {
 
-    console.log("Get FOS values for settlement with ID " + placeID + " within buffer of " + buffer + " m");
+    var coords = (req.params.coords).split(",");
 
-    // Convert to Grads (0.01 = 1200m)
-    var bufferGrad = 0.01*(buffer/1200);
+    // PostGIS Point
+    var point = "POINT("+coords[1]+" "+coords[0]+")";
 
-    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
-             FROM (SELECT 'Feature' As type \
-                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
-                  )) As properties \
-                , ST_AsGeoJSON(lg.geom)::json As geometry \
-               FROM (	 \
-                   SELECT gid, dn, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
-                		WITH polygons AS (SELECT \
-                		    1 AS gid, \
-                		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE osm_id = '"+placeID+"' LIMIT 1), 4326), "+bufferGrad+") AS geom \
-                		) \
-                		SELECT \
-                		    p.gid AS uid, fos.gid AS gid, dn, \
-                		    ST_Intersection(fos.geom, p.geom) AS geom \
-                		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
-                		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
-                    ) As sp \
-               ) As lg ) As f;")
+    console.log("Get ELEVATION from " + req.params.coords);
+
+    db.any("WITH point AS (SELECT \
+            	1 AS gid, \
+            	ST_SetSRID(ST_GeomFromText('"+point+"'), 4326) AS geom \
+            ) \
+            SELECT ST_Value(rast, p.geom) as elevation \
+            FROM point as p, colombia_aoi_tandem \
+            WHERE ST_Intersects(rast, p.geom);")
         .then(function (data) {
-            var fc = data[0];
 
-            // Add query properties
-            fc.properties = {
-                query: 'fos/place',
-                osm_id: placeID,
-                buffer: buffer,
-                intersection: 'yes'
-            };
+            var elevation = (typeof data[0] !== 'undefined') ? data[0].elevation : 0;
 
-            // Response
+            // Return a GeoJSON point
+            // Elevation in "elevation" parameter
+            var pt = turf.point(
+                            [parseFloat(coords[1]), parseFloat(coords[0])],
+                            {
+                                elevation: elevation,
+                                units: 'meters'
+                            })
             res.status(200)
-                .json(fc);
-        })
-        .catch(function (err) {
-            return next(err);
-        });
-}
+                .json(pt); // format '{elevation: 750}', where elev is given in meters
 
-// api/fos/road/:id/:buffer
-function getFOSByRoadID(req, res, next) {
-    var roadID = req.params.id,
-        buffer = (typeof req.params.buffer !== 'undefined') ? parseInt(req.params.buffer) : 1200;
+            // res.status(200)
+            //     .json(data[0]); // format '{elevation: 750}', where elev is given in meters
 
-    console.log("Get FOS values for road with ID " + roadID + " within buffer of " + buffer + " m");
-
-    // Convert to Grads (0.01 = 1200m)
-    var bufferGrad = 0.01*(buffer/1200);
-
-    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
-             FROM (SELECT 'Feature' As type \
-                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
-                  )) As properties \
-                , ST_AsGeoJSON(lg.geom)::json As geometry \
-               FROM (	 \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID((SELECT geom FROM roads_aoi_2d WHERE osm_id = '"+roadID+"' LIMIT 1), 4326), "+bufferGrad+") AS geom \
-            		) \
-            		SELECT \
-            		    p.gid AS uid, fos.gid AS gid, dn, \
-            		    fos.geom AS geom \
-            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
-            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
-               ) As lg ) As f;")
-        .then(function (data) {
-            var fc = data[0];
-
-            // Add query properties
-            fc.properties = {
-                query: 'fos/road',
-                osm_id: roadID,
-                buffer: buffer,
-                intersection: 'no'
-            };
-
-            // Response
-            res.status(200)
-                .json(fc);
+            // var features = [
+            //     turf.point([parseFloat(coords[1]), parseFloat(coords[0])], {elevation: data[0].elevation})
+            // ];
+            //
+            // var fc = turf.featureCollection(features);
+            //
+            // // var fc = {};//data[0];
+            //
+            // // Add query properties
+            // fc.properties = {
+            //     query: 'elevation/point',
+            //     coords: req.params.coords,
+            // };
+            //
+            // // Response
+            // res.status(200)
+            //     .json(fc);
         })
         .catch(function (err) {
             return next(err);
@@ -311,6 +272,106 @@ function getFOSByLineString(req, res, next) {
 
     res.status(200)
       .json(feature);
+}
+
+
+////////////////////////////////////
+// FOS Functions for OSM Features
+////////////////////////////////////
+
+// api/fos/place/:id/:buffer
+function getFOSByPlaceID(req, res, next) {
+    // var placeID = parseInt(req.params.id),
+    var placeID = req.params.id,
+        buffer = (typeof req.params.buffer !== 'undefined') ? parseInt(req.params.buffer) : 1200;
+
+    console.log("Get FOS values for settlement with ID " + placeID + " within buffer of " + buffer + " m");
+
+    // Convert to Grads (0.01 = 1200m)
+    var bufferGrad = 0.01*(buffer/1200);
+
+    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+             FROM (SELECT 'Feature' As type \
+                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
+                  )) As properties \
+                , ST_AsGeoJSON(lg.geom)::json As geometry \
+               FROM (	 \
+                   SELECT gid, dn, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_Buffer(ST_SetSRID((SELECT geom FROM places_aoi_2d WHERE osm_id = '"+placeID+"' LIMIT 1), 4326), "+bufferGrad+") AS geom \
+                		) \
+                		SELECT \
+                		    p.gid AS uid, fos.gid AS gid, dn, \
+                		    ST_Intersection(fos.geom, p.geom) AS geom \
+                		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+                		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                    ) As sp \
+               ) As lg ) As f;")
+        .then(function (data) {
+            var fc = data[0];
+
+            // Add query properties
+            fc.properties = {
+                query: 'fos/place',
+                osm_id: placeID,
+                buffer: buffer,
+                intersection: 'yes'
+            };
+
+            // Response
+            res.status(200)
+                .json(fc);
+        })
+        .catch(function (err) {
+            return next(err);
+        });
+}
+
+// api/fos/road/:id/:buffer
+function getFOSByRoadID(req, res, next) {
+    var roadID = req.params.id,
+        buffer = (typeof req.params.buffer !== 'undefined') ? parseInt(req.params.buffer) : 1200;
+
+    console.log("Get FOS values for road with ID " + roadID + " within buffer of " + buffer + " m");
+
+    // Convert to Grads (0.01 = 1200m)
+    var bufferGrad = 0.01*(buffer/1200);
+
+    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+             FROM (SELECT 'Feature' As type \
+                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
+                  )) As properties \
+                , ST_AsGeoJSON(lg.geom)::json As geometry \
+               FROM (	 \
+            		WITH polygons AS (SELECT \
+            		    1 AS gid, \
+            		    ST_Buffer(ST_SetSRID((SELECT geom FROM roads_aoi_2d WHERE osm_id = '"+roadID+"' LIMIT 1), 4326), "+bufferGrad+") AS geom \
+            		) \
+            		SELECT \
+            		    p.gid AS uid, fos.gid AS gid, dn, \
+            		    fos.geom AS geom \
+            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+               ) As lg ) As f;")
+        .then(function (data) {
+            var fc = data[0];
+
+            // Add query properties
+            fc.properties = {
+                query: 'fos/road',
+                osm_id: roadID,
+                buffer: buffer,
+                intersection: 'no'
+            };
+
+            // Response
+            res.status(200)
+                .json(fc);
+        })
+        .catch(function (err) {
+            return next(err);
+        });
 }
 
 
@@ -553,10 +614,11 @@ module.exports = {
     getPlace: getPlace,
     getAllRoads: getAllRoads,
     getRoad: getRoad,
-    getFOSByPlaceID: getFOSByPlaceID,
-    getFOSByRoadID: getFOSByRoadID,
+    getElevationByCoords: getElevationByCoords,
     getFOSByCoords: getFOSByCoords,
     getFOSByPoints: getFOSByPoints,
+    getFOSByPlaceID: getFOSByPlaceID,
+    getFOSByRoadID: getFOSByRoadID,
     // getFOSByLineString: getFOSByLineString
     getSpecialAreasByPlaceID: getSpecialAreasByPlaceID,
     getSpecialAreasByRoadID: getSpecialAreasByRoadID,

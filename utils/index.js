@@ -8,6 +8,9 @@ utils.array = array;
 var here = require('./here');
 utils.here = here;
 
+var postgres = require('./postgres');
+utils.postgres = postgres;
+
 // GEOPROCESSING utils
 var geo = require('./geoprocessing');
 utils.geo = geo;

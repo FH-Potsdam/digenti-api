@@ -1,9 +1,11 @@
 // requirements
 var fs = require('fs');
+var jsonexport = require('jsonexport'); // export to csv
 var turf = require('turf');
 turf.lineChunk = require('turf-line-chunk');
-turf.featurecollection = require('turf-featurecollection');
-var jsonexport = require('jsonexport');
+
+var chunkLength = 1.0;
+var chunkUnit = 'kilometers';
 
 // open the input json-file
 var inputJSON = require('../streams_aoi');
@@ -27,7 +29,7 @@ for (var i=0; i<inputJSON.features.length; i++) {
     props.followingStreamID = Math.round(line.properties.tribtoIX);
 
     // create a featureCollection with the lineChunks
-    var lineChunks = turf.lineChunk(line, 1.0, 'kilometers');
+    var lineChunks = turf.lineChunk(line, chunkLength, chunkUnit);
 
     // array with the coords of all points
     var pointCoords = [];
@@ -82,13 +84,13 @@ if (removeDuplicates) {
 
 
 // make a featureCollection with the points
-var feature_collection = turf.featurecollection(points);
+var fc = turf.featureCollection(points);
 
 // write json
-fs.writeFileSync('../streams_sliced.json', JSON.stringify(feature_collection));
+fs.writeFileSync('../streams_sliced_points.json', JSON.stringify(fc));
 
 // write csv
-jsonexport(feature_collection.features, function(err, csv){
+jsonexport(fc.features, function(err, csv){
     if(err) return console.log(err);
-    fs.writeFileSync('../streams_sliced.csv', csv);
+    fs.writeFileSync('../streams_sliced_points.csv', csv);
 });

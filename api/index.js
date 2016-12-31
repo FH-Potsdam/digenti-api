@@ -26,14 +26,15 @@ router.get('/api/places/:id', db.getPlace);
 router.get('/api/roads', db.getAllRoads);
 router.get('/api/roads/:id', db.getRoad);
 
-// FOS OSM
-router.get('/api/fos/place/:id', db.getFOSByPlaceID);
-router.get('/api/fos/place/:id/:buffer', db.getFOSByPlaceID);
+/////////////////////
+// Elevation - DEM
+/////////////////////
 
-router.get('/api/fos/road/:id', db.getFOSByRoadID);
-router.get('/api/fos/road/:id/:buffer', db.getFOSByRoadID);
+router.get('/api/elevation/point/:coords', db.getElevationByCoords);
 
+/////////
 // FOS
+/////////
 
 // one point + buffer
 router.get('/api/fos/point/:coords', db.getFOSByCoords);
@@ -43,10 +44,20 @@ router.get('/api/fos/point/:coords/:buffer', db.getFOSByCoords);
 router.get('/api/fos/points/:coords1/:coords2', db.getFOSByPoints);
 router.get('/api/fos/points/:coords1/:coords2/:buffer', db.getFOSByPoints);
 
+// FOS OSM
+router.get('/api/fos/place/:id', db.getFOSByPlaceID);
+router.get('/api/fos/place/:id/:buffer', db.getFOSByPlaceID);
+
+router.get('/api/fos/road/:id', db.getFOSByRoadID);
+router.get('/api/fos/road/:id/:buffer', db.getFOSByRoadID);
+
 // linestring + buffer
 // router.get('/api/fos/linestring', db.getFOSByLineString);
 
-// Special Areas (NDVI - Gradient)
+//////////////////////
+// Special Areas
+// (NDVI - Gradient)
+//////////////////////
 
 // OSM place + buffer
 router.get('/api/specialareas/:ndvi/:gradient/place/:id', db.getSpecialAreasByPlaceID);
