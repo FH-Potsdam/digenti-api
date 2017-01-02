@@ -4,13 +4,138 @@
 
 var geoprocessing = {};
 
+var async = require('asyncawait/async');
+var await = require('asyncawait/await');
+
 var turf = require('turf');
+turf.lineChunk = require('turf-line-chunk');
+
 var unique = require('array-unique');
 var jsonfile = require('jsonfile');
 
-/////////////////////
-// ROUTE Functions
-/////////////////////
+
+/////////////////////////////
+// ROUTE Slicing Functions
+/////////////////////////////
+
+// This function slices a route and gets the elevation for all slices from the DEM (PostGREs)
+geoprocessing.sliceRoute3D = async (function(route, chunkLength, chunkUnit) {
+
+    console.log("Geoprocessing: Slice route in chunks with length " + chunkLength + " " + chunkUnit);
+
+    var utils = module.parent.exports;
+
+    // Get overall distance of the road
+    // var distance = turf.lineDistance(route, 'kilometers');
+    // console.log("distance: " + distance);
+
+    // var points = [];
+    var slicedPolys = [];
+
+    // Slice line in multiple chunks of a given distance
+    var routeChunks = turf.lineChunk(route, chunkLength, chunkUnit);
+
+    console.log("Querying elevation of " + routeChunks.features.length + " points...");
+
+    // For each chunk, select the first coord
+    for (var i=0; i<routeChunks.features.length; i++) {
+
+        var chunk = routeChunks.features[i];
+
+        // Get first point in the slice
+        var coords = chunk.geometry.coordinates[0];
+        var point = turf.point(coords);
+        // points.push(turf.point(coords));
+
+        // Create a buffered polygon and get bounding box
+        // var buffer = turf.buffer(chunk, 0.5*chunkLength, chunkUnit);
+        var buffer = turf.buffer(point, 0.5*chunkLength, chunkUnit);
+        var bbox = turf.bbox(buffer);
+        var poly = turf.bboxPolygon(bbox);
+
+        // Get elevation from PostGREs
+        poly.properties.elevation = await (utils.postgres.getElevationByPoint(point));
+
+        slicedPolys.push(poly);
+    }
+
+    console.log("Slicing finished!");
+
+    return slicedPolys;
+});
+
+// This function slices a route and gets the elevation from the input file, if existent (HERE format [lat, lon, elevation])
+geoprocessing.sliceRoute = async (function(route, chunkLength, chunkUnit) {
+
+    console.log("Geoprocessing: Slice route in chunks with length " + chunkLength + " " + chunkUnit);
+    // console.log("Geoprocessing: Slice route in chunks with length " + chunkLength + " " + chunkUnit);
+
+    var utils = module.parent.exports;
+
+    console.log("coords length: " + route.geometry.coordinates.length);
+
+    // Get overall distance of the road
+    // var distance = turf.lineDistance(route, 'kilometers');
+    // console.log("distance: " + distance);
+
+    // Create an array of points with elevation property
+    var routePoints = [];
+    for (var i=0; i<route.geometry.coordinates.length; i++) {
+
+        var coords = route.geometry.coordinates[i];
+        var point = turf.point(coords);
+
+        // elevation exists
+        if (coords.length > 2) {
+            point.properties.elevation = coords[2];
+        }
+        routePoints.push(point);
+    }
+
+    // Feature collection of route points (to use turf.nearest())
+    var routePointsFC = turf.featureCollection(routePoints);
+
+    // Slice line in multiple chunks of a given distance
+    var slicedPolys = [];
+    var routeChunks = turf.lineChunk(route, chunkLength, chunkUnit);
+
+    console.log("Querying elevation of " + routeChunks.features.length + " points...");
+
+    // For each chunk, select the first coord
+    for (var j=0; j<routeChunks.features.length; j++) {
+
+        var chunk = routeChunks.features[j];
+
+        // Get first point in the slice
+        var coords = chunk.geometry.coordinates[0];
+        var point = turf.point(coords);
+
+        // Create a buffered polygon and get bounding box
+        // var buffer = turf.buffer(chunk, 0.5*chunkLength, chunkUnit);
+        var buffer = turf.buffer(point, 0.5*chunkLength, chunkUnit);
+        var bbox = turf.bbox(buffer);
+        var poly = turf.bboxPolygon(bbox);
+
+        // Get elevation from input route
+        var nearest = turf.nearest(point, routePointsFC);
+        if (nearest.properties.elevation) {
+            poly.properties.elevation = nearest.properties.elevation;
+        } /*else {
+            poly.properties.elevation = await (utils.postgres.getElevationByPoint(point));
+        }*/
+
+        slicedPolys.push(poly);
+    }
+
+    console.log("Slicing finished!");
+
+    return slicedPolys;
+});
+
+
+///////////////////////////
+// ROUTE Parts Functions
+///////////////////////////
 
 // Returns overlapping geometry of two path arrays of points of a line
 geoprocessing.getOverlappingGeometry = function(geometry1, geometry2) {
@@ -27,9 +152,6 @@ geoprocessing.getOverlappingGeometry = function(geometry1, geometry2) {
 
     return overlappingGeometry;
 }
-
-
-
 
 geoprocessing.calculateKnotPoints = function(c) {
 
@@ -59,7 +181,6 @@ geoprocessing.calculateKnotPoints = function(c) {
 
     return knotPoints;
 }
-
 
 geoprocessing.splitRoutes = function(r, k) {
 
@@ -180,8 +301,6 @@ geoprocessing.splitRoutes = function(r, k) {
 
 }
 
-
-
 // Array Unique
 geoprocessing.transformArray = function(arr) {
 
@@ -234,8 +353,6 @@ geoprocessing.transformArray = function(arr) {
     return uniqueArray;
 
 }
-
-
 
 
 

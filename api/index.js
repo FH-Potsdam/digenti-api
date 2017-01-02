@@ -26,11 +26,13 @@ router.get('/api/places/:id', db.getPlace);
 router.get('/api/roads', db.getAllRoads);
 router.get('/api/roads/:id', db.getRoad);
 
+
 /////////////////////
 // Elevation - DEM
 /////////////////////
 
 router.get('/api/elevation/point/:coords', db.getElevationByCoords);
+
 
 /////////
 // FOS
@@ -54,6 +56,7 @@ router.get('/api/fos/road/:id/:buffer', db.getFOSByRoadID);
 // linestring + buffer
 // router.get('/api/fos/linestring', db.getFOSByLineString);
 
+
 //////////////////////
 // Special Areas
 // (NDVI - Gradient)
@@ -76,7 +79,6 @@ router.get('/api/specialareas/:ndvi/:gradient/points/:coords1/:coords2', db.getS
 router.get('/api/specialareas/:ndvi/:gradient/points/:coords1/:coords2/:buffer', db.getSpecialAreasByPoints);
 
 
-
 //////////////
 // HERE API
 //////////////
@@ -92,8 +94,6 @@ router.get('/api/route/:start/:end', here.calculateRoute);
 //router.get('/api/routes/:start/:end', here.calculateRoute);
 //router.post('/api/routes/onetomany/:start/', here.calculateRoute);
 
-module.exports = router;
-
 
 ///////////////////////
 // GEOPROCESSING API
@@ -102,3 +102,12 @@ module.exports = router;
 var geoprocessing = require('./geoprocessing');
 
 router.post('/api/geoprocessing/routeparts', geoprocessing.calculateRouteParts);
+// router.post('/api/geoprocessing/sliceroute3d', geoprocessing.sliceRoute3D);
+// router.post('/api/geoprocessing/sliceroute', geoprocessing.sliceRoute);
+
+
+/////////////
+// Exports
+/////////////
+
+module.exports = router;

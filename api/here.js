@@ -127,6 +127,8 @@ function calculateRoute(req, res, next) {
     var start = (req.params.start).split(","),
         end = (req.params.end).split(",");
 
+    var slice = (typeof req.query.slice !== 'undefined' && req.query.slice !== 'false' && parseInt(req.query.slice) !== 0);
+
     // Query params
     var params = {};
     params['waypoint0'] = 'geo!'+start[0]+','+start[1];
@@ -167,12 +169,39 @@ function calculateRoute(req, res, next) {
 
         rp(options)
             .then(function (data) {
-                // calculate JSON for route
-                var response = utils.here.processRouteResponse(data, params);
 
-                // cache route JSON
-                utils.cache.writeCacheFile(file, response);
-                res.status(200).json(response)
+                // calculate JSON for route
+                var routeGeoJSON = utils.here.processRouteResponse(data, params);
+
+                // Slice route with a resolution and get elevation from it
+                if (slice) {
+                    var response = [];
+
+                    // Add LineString route in the first position
+                    response.push(routeGeoJSON);
+
+                    // Use geoprocessing's sliceLine3D function
+                    utils.geo.sliceRoute(routeGeoJSON, config.slicing.resolution / 1000, 'kilometers')
+                        .then (function (slicedPolys) {
+
+                            var fc = turf.featureCollection(slicedPolys);
+
+                            response.push(fc);
+
+                            // cache route JSON
+                            utils.cache.writeCacheFile(file, response);
+                            res.status(200).json(response)
+
+                        })
+                        .catch(function (err) {
+                            console.log('Something went wrong: ' + err);
+                            return next(err);
+                        });
+                } else {
+                    // cache route JSON
+                    utils.cache.writeCacheFile(file, routeGeoJSON);
+                    res.status(200).json(routeGeoJSON)
+                }
             })
             .catch(function (err) {
                 return next(err);
@@ -182,35 +211,11 @@ function calculateRoute(req, res, next) {
 
 
 
-
-function calculateRoutes(req, res, next) {
-
-    // Input Object to Array
-    //console.log(req.body);
-    //console.log(req.paramrs.start);
-
-    var routes = "These are really great routes.";
-
-    // return result as json
-    res.status(200)
-        .json({
-            status: 'success',
-            data: routes,
-            message: 'You just received the best routes ever!'
-        });
-
-}
-
-
-
-
-
 /////////////
 // Exports
 /////////////
 
 module.exports = {
     getIsoline: getIsoline,
-    calculateRoute: calculateRoute,
-    calculateRoutes: calculateRoutes
+    calculateRoute: calculateRoute
 };

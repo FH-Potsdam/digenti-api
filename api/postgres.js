@@ -1,8 +1,8 @@
 var config = require('./../config');
 var utils = require('./../utils/index');
-var promise = require('bluebird');
 var turf = require('turf');
 
+var promise = require('bluebird');
 var options = {
   // Initialization Options
   promiseLib: promise
@@ -11,8 +11,6 @@ var options = {
 var pgp = require('pg-promise')(options);
 var connectionString = 'postgres://' + config.db.host + ':' + config.db.port + '/' + config.db.name;
 var db = pgp(connectionString);
-
-var turf = require('turf');
 
 
 ///////////////////

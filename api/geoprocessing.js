@@ -13,9 +13,18 @@ var fs = require('fs');
 var util = require('util');
 
 
-/////////////////////
-// ROUTE Functions
-/////////////////////
+/////////////////////////////
+// ROUTE Slicing Functions
+/////////////////////////////
+
+function sliceRoute3D(req, res, next) {
+
+}
+
+
+////////////////////////////
+// ROUTE Parts Functions
+////////////////////////////
 
 function calculateRouteParts(req, res, next) {
 
