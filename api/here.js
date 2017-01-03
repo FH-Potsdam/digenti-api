@@ -135,7 +135,8 @@ function calculateRoute(req, res, next) {
     params['waypoint1'] = 'geo!'+end[0]+','+end[1];
 
     // Define filename of cached file
-    var filename = params['waypoint0'] + '_' + params['waypoint1'] + '.json';
+    var cacheID = params['waypoint0'] + '_' + params['waypoint1'];
+    var filename = cacheID + '.json';
 
     // get cached file
     var file = utils.cache.getCacheFile("route", filename);
@@ -171,17 +172,20 @@ function calculateRoute(req, res, next) {
             .then(function (data) {
 
                 // calculate JSON for route
-                var routeGeoJSON = utils.here.processRouteResponse(data, params);
+                var routeFeature = utils.here.processRouteResponse(data, params);
+
+                // Add cache file filename
+                routeFeature.properties.cacheId = cacheID;
 
                 // Slice route with a resolution and get elevation from it
                 if (slice) {
                     var response = [];
 
                     // Add LineString route in the first position
-                    response.push(routeGeoJSON);
+                    response.push(routeFeature);
 
                     // Use geoprocessing's sliceLine3D function
-                    utils.geo.sliceRoute(routeGeoJSON, config.slicing.resolution / 1000, 'kilometers')
+                    utils.geo.sliceRoute(routeFeature, config.slicing.resolution / 1000, 'kilometers')
                         .then (function (slicedPolys) {
 
                             var fc = turf.featureCollection(slicedPolys);
@@ -199,8 +203,8 @@ function calculateRoute(req, res, next) {
                         });
                 } else {
                     // cache route JSON
-                    utils.cache.writeCacheFile(file, routeGeoJSON);
-                    res.status(200).json(routeGeoJSON)
+                    utils.cache.writeCacheFile(file, routeFeature);
+                    res.status(200).json(routeFeature)
                 }
             })
             .catch(function (err) {
