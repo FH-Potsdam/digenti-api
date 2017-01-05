@@ -32,6 +32,7 @@ router.get('/api/roads/:id', db.getRoad);
 /////////////////////
 
 router.get('/api/elevation/point/:coords', db.getElevationByCoords);
+router.get('/api/profile/points/:coords1/:coords2', db.getProfileBetween2Points);
 
 
 /////////

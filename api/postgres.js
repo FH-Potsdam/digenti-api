@@ -126,29 +126,51 @@ function getElevationByCoords(req, res, next) {
                             })
             res.status(200)
                 .json(pt); // format '{elevation: 750}', where elev is given in meters
-
-            // res.status(200)
-            //     .json(data[0]); // format '{elevation: 750}', where elev is given in meters
-
-            // var features = [
-            //     turf.point([parseFloat(coords[1]), parseFloat(coords[0])], {elevation: data[0].elevation})
-            // ];
-            //
-            // var fc = turf.featureCollection(features);
-            //
-            // // var fc = {};//data[0];
-            //
-            // // Add query properties
-            // fc.properties = {
-            //     query: 'elevation/point',
-            //     coords: req.params.coords,
-            // };
-            //
-            // // Response
-            // res.status(200)
-            //     .json(fc);
         })
         .catch(function (err) {
+            return next(err);
+        });
+}
+
+function getProfileBetween2Points(req, res, next) {
+
+    var coords1 = (req.params.coords1).split(",").map(parseFloat),
+        coords2 = (req.params.coords2).split(",").map(parseFloat);
+
+    var start = [coords1[1], coords1[0]],
+        end = [coords2[1], coords2[0]];
+
+    var routeFeature = turf.lineString([start, end]);
+
+    console.log(JSON.stringify(routeFeature));
+
+    var response = [];
+
+    // Add LineString route in the first position
+    response.push(routeFeature);
+
+    // Use geoprocessing's sliceLine3D function
+    utils.geo.sliceRoute3D(routeFeature, config.profile.resolution / 1000, 'kilometers')
+        .then (function (slicedPolys) {
+
+            var fc = turf.featureCollection(slicedPolys);
+
+            response.push(fc);
+
+            // cache route JSON
+            // utils.cache.writeCacheFile(file, response);
+            // res.status(200).json(response)
+
+            fc.properties = {
+                query: 'profile/points',
+                start: start,
+                end: end
+            };
+
+            res.status(200).json(fc)
+        })
+        .catch(function (err) {
+            console.log('Something went wrong: ' + err);
             return next(err);
         });
 }
@@ -613,6 +635,7 @@ module.exports = {
     getAllRoads: getAllRoads,
     getRoad: getRoad,
     getElevationByCoords: getElevationByCoords,
+    getProfileBetween2Points: getProfileBetween2Points,
     getFOSByCoords: getFOSByCoords,
     getFOSByPoints: getFOSByPoints,
     getFOSByPlaceID: getFOSByPlaceID,

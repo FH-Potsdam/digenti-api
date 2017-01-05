@@ -29,7 +29,7 @@ config.simplify.tolerance.route = 0.0005;
 config.simplify.tolerance.isoline = 0.001;
 
 // Slicing params
-config.slicing = {};
-config.slicing.resolution = 10; // in meters
+config.profile = {};
+config.profile.resolution = 10; // in meters
 
 module.exports = config;

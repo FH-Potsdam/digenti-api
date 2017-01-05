@@ -127,7 +127,9 @@ function calculateRoute(req, res, next) {
     var start = (req.params.start).split(","),
         end = (req.params.end).split(",");
 
-    var slice = (typeof req.query.slice !== 'undefined' && req.query.slice !== 'false' && parseInt(req.query.slice) !== 0);
+    var slice = (typeof req.query.profile !== 'undefined' && req.query.profile !== 'false' && parseInt(req.query.profile) !== 0);
+
+    console.log("var: " + req.query.profile + ", slice: " + slice);
 
     // Query params
     var params = {};
@@ -185,7 +187,7 @@ function calculateRoute(req, res, next) {
                     response.push(routeFeature);
 
                     // Use geoprocessing's sliceLine3D function
-                    utils.geo.sliceRoute(routeFeature, config.slicing.resolution / 1000, 'kilometers')
+                    utils.geo.sliceRoute(routeFeature, config.profile.resolution / 1000, 'kilometers')
                         .then (function (slicedPolys) {
 
                             var fc = turf.featureCollection(slicedPolys);
