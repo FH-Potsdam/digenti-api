@@ -103,7 +103,7 @@ function getElevationByCoords(req, res, next) {
     // PostGIS Point
     var point = "POINT("+coords[1]+" "+coords[0]+")";
 
-    console.log("Get ELEVATION from " + req.params.coords);
+    // console.log("Get ELEVATION from " + req.params.coords);
 
     db.any("WITH point AS (SELECT \
             	1 AS gid, \
@@ -140,39 +140,75 @@ function getProfileBetween2Points(req, res, next) {
     var start = [coords1[1], coords1[0]],
         end = [coords2[1], coords2[0]];
 
-    var routeFeature = turf.lineString([start, end]);
 
-    console.log(JSON.stringify(routeFeature));
+    var params = {};
+    params['waypoint0'] = 'geo!'+start[0]+','+start[1];
+    params['waypoint1'] = 'geo!'+end[0]+','+end[1];
 
-    var response = [];
+    // Define filename of cached file
+    var cacheID = params['waypoint0'] + '_' + params['waypoint1'];
+    var filename = cacheID + '.json';
 
-    // Add LineString route in the first position
-    response.push(routeFeature);
+    // get cached file
+    var file = utils.cache.getCacheFile("missing", filename);
 
-    // Use geoprocessing's sliceLine3D function
-    utils.geo.sliceRoute3D(routeFeature, config.profile.resolution / 1000, 'kilometers')
-        .then (function (slicedPolys) {
+    // File exists in cache
+    if (utils.cache.checkCacheValidity(file)) {
 
-            var fc = turf.featureCollection(slicedPolys);
+        console.log("Cache " + file + " exists'");
 
-            response.push(fc);
+        var cacheContent = utils.cache.readCacheFile(file);
+        res.status(200).json(cacheContent);
 
-            // cache route JSON
-            // utils.cache.writeCacheFile(file, response);
-            // res.status(200).json(response)
+        // fs.readFile(file, function read(err, data) {
+        //     if (err) { throw err; }
+        //     var jsonContent = JSON.parse(data);
+        //     res.status(200).json(jsonContent)
+        // });
 
-            fc.properties = {
-                query: 'profile/points',
-                start: start,
-                end: end
-            };
+    // Non-existent or cache expired
+    } else {
 
-            res.status(200).json(fc)
-        })
-        .catch(function (err) {
-            console.log('Something went wrong: ' + err);
-            return next(err);
-        });
+        console.log("Cache file " + file + " doesn't exist'");
+
+        // Response object
+        var response = [];
+
+        // Calculate distance
+        var dist = turf.distance(turf.point(start), turf.point(end), 'meters')
+
+        // Create route feature
+        var routeFeature = turf.lineString([start, end], { distance: Math.round(dist) });
+
+        console.log(JSON.stringify(routeFeature));
+
+        // Add LineString route in the first position
+        response.push(routeFeature);
+
+        // Use geoprocessing's sliceLine3D function
+        utils.geo.sliceRoute3D(routeFeature, config.profile.resolution / 1000, 'kilometers')
+            .then (function (slicedPolys) {
+
+                var fc = turf.featureCollection(slicedPolys);
+                response.push(fc);
+
+                // cache route JSON
+                utils.cache.writeCacheFile(file, response);
+                res.status(200).json(response);
+
+                // fc.properties = {
+                //     query: 'profile/points',
+                //     start: start,
+                //     end: end
+                // };
+                //
+                // res.status(200).json(fc)
+            })
+            .catch(function (err) {
+                console.log('Something went wrong: ' + err);
+                return next(err);
+            });
+    }
 }
 
 

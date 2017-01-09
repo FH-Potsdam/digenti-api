@@ -43,11 +43,16 @@ cache.getCacheFile = function (subdir, filename) {
     return file;
 }
 
-// wirte data in cache file
+// write data in cache file
 cache.writeCacheFile = function (file, data) {
     jsonfile.writeFile(file, data, function (err) {
         console.error(err)
     });
+}
+
+// read data from cache file
+cache.readCacheFile = function (file) {
+    return jsonfile.readFileSync(file);
 }
 
 

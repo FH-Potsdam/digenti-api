@@ -8,9 +8,8 @@
 var config = require('./../config');
 var utils = require('./../utils/index');
 var rp = require('request-promise');
-var fs = require('fs');
+// var fs = require('fs');
 var util = require('util');
-var fileExists = require('file-exists');
 var turf = require('turf');
 
 ///////////////////////
@@ -76,11 +75,14 @@ function getIsoline(req, res, next) {
     if (utils.cache.checkCacheValidity(file)) {
         // cache still valid
 
-        fs.readFile(file, function read(err, data) {
-            if (err) { throw err; }
-            var jsonContent = JSON.parse(data);
-            res.status(200).json(jsonContent)
-        });
+        var cacheContent = utils.cache.readCacheFile(file);
+        res.status(200).json(cacheContent);
+
+        // fs.readFile(file, function read(err, data) {
+        //     if (err) { throw err; }
+        //     var jsonContent = JSON.parse(data);
+        //     res.status(200).json(jsonContent)
+        // });
 
     } else {
         // cache expired
@@ -113,7 +115,6 @@ function getIsoline(req, res, next) {
                 return next(err);
             });
     }
-
 }
 
 
@@ -127,10 +128,6 @@ function calculateRoute(req, res, next) {
     var start = (req.params.start).split(","),
         end = (req.params.end).split(",");
 
-    var slice = (typeof req.query.profile !== 'undefined' && req.query.profile !== 'false' && parseInt(req.query.profile) !== 0);
-
-    console.log("var: " + req.query.profile + ", slice: " + slice);
-
     // Query params
     var params = {};
     params['waypoint0'] = 'geo!'+start[0]+','+start[1];
@@ -142,20 +139,68 @@ function calculateRoute(req, res, next) {
 
     // get cached file
     var file = utils.cache.getCacheFile("route", filename);
-
     console.log("File: " + file);
 
+    // Check slicing
+    var fileSliced = null;
+    var slice = (typeof req.query.profile !== 'undefined' && req.query.profile !== 'false' && parseInt(req.query.profile) !== 0);
+    if (slice) {
+        // console.log("var: " + req.query.profile + ", slice: " + slice);
+        var filenameSliced = cacheID + '_res' + config.profile.resolution + '.json'
+        fileSliced = utils.cache.getCacheFile("routesliced", filenameSliced);
+        console.log("File slice: " + fileSliced);
+    }
+
+    // File exists in cache
     if (utils.cache.checkCacheValidity(file)) {
-        // cache still valid
 
-        fs.readFile(file, function read(err, data) {
-            if (err) { throw err; }
-            var jsonContent = JSON.parse(data);
-            res.status(200).json(jsonContent)
-        });
+        var routeFeature = utils.cache.readCacheFile(file);
 
+        // We want sliced version
+        if (slice) {
+            var response = [];
+            response.push(routeFeature);
+
+            // Sliced file exists
+            if (utils.cache.checkCacheValidity(fileSliced)) {
+                var slicedFC = utils.cache.readCacheFile(fileSliced);
+                response.push(slicedFC);
+
+                res.status(200).json(response);
+
+            // Sliced file doesn't exist
+            } else {
+
+                // Use geoprocessing's sliceLine3D function
+                utils.geo.sliceRoute(routeFeature, config.profile.resolution / 1000, 'kilometers')
+                    .then (function (slicedPolys) {
+
+                        var slicedFC = turf.featureCollection(slicedPolys);
+                        response.push(slicedFC);
+
+                        // cache sliced route JSON
+                        utils.cache.writeCacheFile(fileSliced, slicedFC);
+
+                        res.status(200).json(response)
+                    })
+                    .catch(function (err) {
+                        console.log('Something went wrong: ' + err);
+                        return next(err);
+                    });
+            }
+
+        } else {
+            res.status(200).json(routeFeature);
+        }
+
+        // fs.readFile(file, function read(err, data) {
+        //     if (err) { throw err; }
+        //     var jsonContent = JSON.parse(data);
+        //     res.status(200).json(jsonContent)
+        // });
+
+    // Non-existent or cache expired
     } else {
-        // cache expired
 
         // Merge with defaults
         var query = Object.assign({}, appParams, routeParams, params);
@@ -177,7 +222,7 @@ function calculateRoute(req, res, next) {
                 var routeFeature = utils.here.processRouteResponse(data, params);
 
                 // Add cache file filename
-                routeFeature.properties.cacheId = cacheID;
+                // routeFeature.properties.cacheId = cacheID;
 
                 // Slice route with a resolution and get elevation from it
                 if (slice) {
@@ -190,12 +235,14 @@ function calculateRoute(req, res, next) {
                     utils.geo.sliceRoute(routeFeature, config.profile.resolution / 1000, 'kilometers')
                         .then (function (slicedPolys) {
 
-                            var fc = turf.featureCollection(slicedPolys);
-
-                            response.push(fc);
+                            var slicedFC = turf.featureCollection(slicedPolys);
+                            response.push(slicedFC);
 
                             // cache route JSON
-                            utils.cache.writeCacheFile(file, response);
+                            // utils.cache.writeCacheFile(file, response);
+                            utils.cache.writeCacheFile(file, routeFeature);
+                            utils.cache.writeCacheFile(fileSliced, slicedFC);
+
                             res.status(200).json(response)
 
                         })

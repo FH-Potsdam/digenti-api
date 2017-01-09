@@ -5,7 +5,6 @@
 var here = {};
 var turf = require('turf');
 var jsonfile = require('jsonfile');
-var fs = require('fs');
 var util = require('util');
 
 
