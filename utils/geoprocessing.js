@@ -35,6 +35,8 @@ geoprocessing.sliceRoute3D = async (function(route, chunkLength, chunkUnit) {
     // Slice line in multiple chunks of a given distance
     var routeChunks = turf.lineChunk(route, chunkLength, chunkUnit);
 
+    var lastElev = 0;
+
     console.log("Querying elevation of " + routeChunks.features.length + " points...");
 
     // For each chunk, select the first coord
@@ -54,7 +56,15 @@ geoprocessing.sliceRoute3D = async (function(route, chunkLength, chunkUnit) {
         var poly = turf.bboxPolygon(bbox);
 
         // Get elevation from PostGREs
-        poly.properties.elevation = await (utils.postgres.getElevationByPoint(point));
+        var elev = await (utils.postgres.getElevationByPoint(point));
+
+        // If elevation is 0, get last elevation (some wrong values are returned)
+        if (elev !== 0) {
+            poly.properties.elevation = elev;
+            lastElev = elev
+        } else {
+            poly.properties.elevation = lastElev;
+        }
 
         slicedPolys.push(poly);
     }
