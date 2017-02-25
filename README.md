@@ -2,7 +2,6 @@
 
 DIGENTI REST API.
 
-More info soon.
 
 ## Installation
 
@@ -68,3 +67,17 @@ If everything is ok, you should see:
 - [turf.js](https://github.com/Turfjs/turf)
 - [concaveman](https://github.com/mapbox/concaveman)
 - [Express](http://expressjs.com/)
+
+## License
+
+You may use this code under the terms of the MIT License. See http://en.wikipedia.org/wiki/MIT_License for more information.
+
+If you make enhancements or changes we would love to hear from you.
+
+Copyright (C) 2017 Jordi Tost, Fabian Ehmel, and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
