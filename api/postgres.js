@@ -394,6 +394,10 @@ function getFOSByRoadID(req, res, next) {
     // Convert to Grads (0.01 = 1200m)
     var bufferGrad = 0.01*(buffer/1200);
 
+    var intersect = (typeof req.query.intersect !== 'undefined' && req.query.intersect !== 'false' && parseInt(req.query.intersect) !== 0);
+
+    var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+
     db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
              FROM (SELECT 'Feature' As type \
                 , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
@@ -406,7 +410,7 @@ function getFOSByRoadID(req, res, next) {
             		) \
             		SELECT \
             		    p.gid AS uid, fos.gid AS gid, dn, \
-            		    fos.geom AS geom \
+                        " + fosGeom + " AS geom \
             		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
             		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
                ) As lg ) As f;")
@@ -418,7 +422,7 @@ function getFOSByRoadID(req, res, next) {
                 query: 'fos/road',
                 osm_id: roadID,
                 buffer: buffer,
-                intersection: 'no'
+                intersection: (intersect ? 'yes' : 'no')
             };
 
             // Response
