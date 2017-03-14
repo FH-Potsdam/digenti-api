@@ -57,6 +57,7 @@ router.get('/api/fos/road/:id/:buffer', db.getFOSByRoadID);
 
 // GeoJSON Route + buffer
 router.post('/api/fos/polygon', db.getFOSByGeoJSONPolygon);
+router.post('/api/fos/point', db.getFOSByGeoJSONPoint);
 router.post('/api/fos/linestring', db.getFOSByGeoJSONLineString);
 router.post('/api/fos/route', db.getFOSByGeoJSONLineString);
 // router.post('/api/fos/route', db.getFOSbyRoute);

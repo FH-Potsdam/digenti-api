@@ -456,13 +456,65 @@ function getFOSByGeoJSONPolygon(req, res, next) {
             		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
                ) As lg ) As f;")
         .then(function (data) {
-            
+
             var fc = data[0];
 
             // Add query properties
             fc.properties = {
                 query: 'fos/polygon',
                 feature: feature.geometry.type,
+                intersect: (intersect ? 'yes' : 'no')
+            };
+
+            // Response
+            res.status(200)
+                .json(fc);
+        })
+        .catch(function (err) {
+            return next(err);
+        });
+}
+
+// api/fos/point
+function getFOSByGeoJSONPoint(req, res, next) {
+
+    // Get params
+    var feature = (typeof req.body.feature !== 'undefined') ? JSON.parse(req.body.feature) : req.body,
+        buffer = (typeof req.body.buffer !== 'undefined') ? parseInt(req.body.buffer) : 100,
+        intersect = (typeof req.body.intersect !== 'undefined' && req.body.intersect !== false);
+
+    // Convert to Grads (0.01 = 1200m)
+    var bufferGrad = 0.01*(buffer/1200);
+
+    console.log("Get FOS values for GeoJSON Point '" + feature.geometry.type + "' within buffer of " + buffer + " m");
+
+    var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+
+    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+             FROM (SELECT 'Feature' As type \
+                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
+                  )) As properties \
+                , ST_AsGeoJSON(lg.geom)::json As geometry \
+               FROM (	 \
+            		WITH polygons AS (SELECT \
+            		    1 AS gid, \
+            		    ST_Buffer(ST_SetSRID(ST_GeomFromGeoJSON('"+JSON.stringify(feature.geometry)+"'), 4326), "+bufferGrad+") AS geom \
+            		) \
+            		SELECT \
+            		    p.gid AS uid, fos.gid AS gid, dn, \
+                        " + fosGeom + " AS geom \
+            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+               ) As lg ) As f;")
+        .then(function (data) {
+
+            var fc = data[0];
+
+            // Add query properties
+            fc.properties = {
+                query: 'fos/point',
+                feature: feature.geometry.type,
+                buffer: buffer,
                 intersect: (intersect ? 'yes' : 'no')
             };
 
@@ -779,6 +831,7 @@ module.exports = {
     getFOSByPlaceID: getFOSByPlaceID,
     getFOSByRoadID: getFOSByRoadID,
     getFOSByGeoJSONPolygon: getFOSByGeoJSONPolygon,
+    getFOSByGeoJSONPoint: getFOSByGeoJSONPoint,
     getFOSByGeoJSONLineString: getFOSByGeoJSONLineString,
     // getFOSbyRoute: getFOSbyRoute,
     getSpecialAreasByPlaceID: getSpecialAreasByPlaceID,
