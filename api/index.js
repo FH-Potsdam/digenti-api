@@ -47,15 +47,19 @@ router.get('/api/fos/point/:coords/:buffer', db.getFOSByCoords);
 router.get('/api/fos/points/:coords1/:coords2', db.getFOSByPoints);
 router.get('/api/fos/points/:coords1/:coords2/:buffer', db.getFOSByPoints);
 
-// FOS OSM
+// OSM place + buffer
 router.get('/api/fos/place/:id', db.getFOSByPlaceID);
 router.get('/api/fos/place/:id/:buffer', db.getFOSByPlaceID);
 
+// OSM road + buffer
 router.get('/api/fos/road/:id', db.getFOSByRoadID);
 router.get('/api/fos/road/:id/:buffer', db.getFOSByRoadID);
 
-// linestring + buffer
-// router.get('/api/fos/linestring', db.getFOSByLineString);
+// GeoJSON Route + buffer
+router.post('/api/fos/polygon', db.getFOSByGeoJSONPolygon);
+router.post('/api/fos/linestring', db.getFOSByGeoJSONLineString);
+router.post('/api/fos/route', db.getFOSByGeoJSONLineString);
+// router.post('/api/fos/route', db.getFOSbyRoute);
 
 
 //////////////////////

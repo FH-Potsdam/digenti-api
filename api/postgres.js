@@ -255,7 +255,7 @@ function getFOSByCoords(req, res, next) {
                 query: 'fos/point',
                 coords: req.params.coords,
                 buffer: buffer,
-                intersection: 'yes'
+                intersect: 'yes'
             };
 
             // Response
@@ -307,7 +307,7 @@ function getFOSByPoints(req, res, next) {
                 coords1: req.params.coords1,
                 coords2: req.params.coords2,
                 buffer: buffer,
-                intersection: 'yes'
+                intersect: 'yes'
             };
 
             // Response
@@ -317,17 +317,6 @@ function getFOSByPoints(req, res, next) {
         .catch(function (err) {
             return next(err);
         });
-}
-
-// api/fos/linestring
-function getFOSByLineString(req, res, next) {
-
-    var feature = JSON.parse(req.query.data);
-
-    console.log("type:" + feature.type);
-
-    res.status(200)
-      .json(feature);
 }
 
 
@@ -372,7 +361,7 @@ function getFOSByPlaceID(req, res, next) {
                 query: 'fos/place',
                 osm_id: placeID,
                 buffer: buffer,
-                intersection: 'yes'
+                intersect: 'yes'
             };
 
             // Response
@@ -422,7 +411,7 @@ function getFOSByRoadID(req, res, next) {
                 query: 'fos/road',
                 osm_id: roadID,
                 buffer: buffer,
-                intersection: (intersect ? 'yes' : 'no')
+                intersect: (intersect ? 'yes' : 'no')
             };
 
             // Response
@@ -433,6 +422,115 @@ function getFOSByRoadID(req, res, next) {
             return next(err);
         });
 }
+
+
+/////////////////////////////
+// FOS by GeoJSON features
+/////////////////////////////
+
+// api/fos/polygon
+function getFOSByGeoJSONPolygon(req, res, next) {
+
+    // Get params
+    var feature = (typeof req.body.feature !== 'undefined') ? JSON.parse(req.body.feature) : req.body,
+        intersect = (typeof req.body.intersect !== 'undefined' && req.body.intersect !== false);
+
+    console.log("Get FOS values for GeoJSON Polygon '" + feature.geometry.type + "'");
+
+    var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+
+    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+             FROM (SELECT 'Feature' As type \
+                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
+                  )) As properties \
+                , ST_AsGeoJSON(lg.geom)::json As geometry \
+               FROM (	 \
+            		WITH polygons AS (SELECT \
+            		    1 AS gid, \
+            		    ST_SetSRID(ST_GeomFromGeoJSON('"+JSON.stringify(feature.geometry)+"'), 4326) AS geom \
+            		) \
+            		SELECT \
+            		    p.gid AS uid, fos.gid AS gid, dn, \
+                        " + fosGeom + " AS geom \
+            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+               ) As lg ) As f;")
+        .then(function (data) {
+            
+            var fc = data[0];
+
+            // Add query properties
+            fc.properties = {
+                query: 'fos/polygon',
+                feature: feature.geometry.type,
+                intersect: (intersect ? 'yes' : 'no')
+            };
+
+            // Response
+            res.status(200)
+                .json(fc);
+        })
+        .catch(function (err) {
+            return next(err);
+        });
+}
+
+// api/fos/linestring
+function getFOSByGeoJSONLineString(req, res, next) {
+
+    // Get params
+    var feature = (typeof req.body.feature !== 'undefined') ? JSON.parse(req.body.feature) : req.body,
+        buffer = (typeof req.body.buffer !== 'undefined') ? parseInt(req.body.buffer) : 100,
+        intersect = (typeof req.body.intersect !== 'undefined' && req.body.intersect !== false);
+
+    // Convert to Grads (0.01 = 1200m)
+    var bufferGrad = 0.01*(buffer/1200);
+
+    console.log("Get FOS values for GeoJSON LineString '" + feature.geometry.type + "' within buffer of " + buffer + " m");
+
+    var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+
+    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+             FROM (SELECT 'Feature' As type \
+                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
+                  )) As properties \
+                , ST_AsGeoJSON(lg.geom)::json As geometry \
+               FROM (	 \
+            		WITH polygons AS (SELECT \
+            		    1 AS gid, \
+            		    ST_Buffer(ST_SetSRID(ST_GeomFromGeoJSON('"+JSON.stringify(feature.geometry)+"'), 4326), "+bufferGrad+") AS geom \
+            		) \
+            		SELECT \
+            		    p.gid AS uid, fos.gid AS gid, dn, \
+                        " + fosGeom + " AS geom \
+            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+               ) As lg ) As f;")
+        .then(function (data) {
+
+            var fc = data[0];
+
+            // Add query properties
+            fc.properties = {
+                query: 'fos/linestring',
+                feature: feature.geometry.type,
+                buffer: buffer,
+                intersect: (intersect ? 'yes' : 'no')
+            };
+
+            // Response
+            res.status(200)
+                .json(fc);
+        })
+        .catch(function (err) {
+            return next(err);
+        });
+}
+
+// // api/fos/route
+// function getFOSbyRoute(req, res, next) {
+//     getFOSByGeoJSONLineString(req, res, next);
+// }
 
 
 /////////////////////////////////////////////////////////////////
@@ -481,7 +579,7 @@ function getSpecialAreasByPlaceID(req, res, next) {
                 query: 'specialareas/place',
                 osm_id: placeID,
                 buffer: buffer,
-                intersection: 'yes'
+                intersect: 'yes'
             };
 
             // Response
@@ -533,7 +631,7 @@ function getSpecialAreasByRoadID(req, res, next) {
                 query: 'specialareas/road',
                 osm_id: roadID,
                 buffer: buffer,
-                intersection: 'no'
+                intersect: 'no'
             };
 
             // Response
@@ -595,7 +693,7 @@ function getSpecialAreasByCoords(req, res, next) {
                 query: 'specialareas/point',
                 coords: req.params.coords,
                 buffer: buffer,
-                intersection: 'yes'
+                intersect: 'yes'
             };
 
             // Response
@@ -652,7 +750,7 @@ function getSpecialAreasByPoints(req, res, next) {
                 coords1: req.params.coords1,
                 coords2: req.params.coords2,
                 buffer: buffer,
-                intersection: 'yes'
+                intersect: 'yes'
             };
 
             // Response
@@ -680,7 +778,9 @@ module.exports = {
     getFOSByPoints: getFOSByPoints,
     getFOSByPlaceID: getFOSByPlaceID,
     getFOSByRoadID: getFOSByRoadID,
-    // getFOSByLineString: getFOSByLineString
+    getFOSByGeoJSONPolygon: getFOSByGeoJSONPolygon,
+    getFOSByGeoJSONLineString: getFOSByGeoJSONLineString,
+    // getFOSbyRoute: getFOSbyRoute,
     getSpecialAreasByPlaceID: getSpecialAreasByPlaceID,
     getSpecialAreasByRoadID: getSpecialAreasByRoadID,
     getSpecialAreasByCoords: getSpecialAreasByCoords,

@@ -20,7 +20,7 @@ var concaveFeature = turf.polygon([concave], {
         "stroke-width": 2 });
 
 // Roads
-var roadsContents = fs.readFileSync('../data/roads_aoi.json'),
+var roadsContents = fs.readFileSync('../../data/roads_aoi.json'),
     roadsData = JSON.parse(roadsContents),
     bufferedRoads = null;
 
@@ -51,4 +51,4 @@ newIsodistance.properties = {
 // console.log(JSON.stringify(newIsodistance));
 var result = turf.featureCollection([newIsodistance]);
 
-fs.writeFileSync('../data/isodistance_intersect_roads_concave.json', JSON.stringify(result));
+fs.writeFileSync('../../data/isodistance_intersect_roads_concave.json', JSON.stringify(result));

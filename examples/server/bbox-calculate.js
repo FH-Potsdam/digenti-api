@@ -1,7 +1,7 @@
 var turf = require('turf');
 var fs = require('fs')
 
-var contents = fs.readFileSync('../data/poblaciones_dane_2012_aoi.geojson');
+var contents = fs.readFileSync('../../data/poblaciones_dane_2012_aoi.geojson');
 var data = JSON.parse(contents);
 
 var resultFeatures = JSON.parse(contents).features;
@@ -25,4 +25,4 @@ var result = {
   "features": resultFeatures
 };
 
-fs.writeFileSync('../data/poblaciones_dane_2012_aoi_bbox.geojson', JSON.stringify(result));
+fs.writeFileSync('../../data/poblaciones_dane_2012_aoi_bbox.geojson', JSON.stringify(result));

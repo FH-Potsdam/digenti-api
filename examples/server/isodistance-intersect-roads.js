@@ -9,7 +9,7 @@ var isodistance = {"type":"Feature","properties":{"objectID":"id1467893753242cpr
     bufferedIsodistance = turf.buffer(isodistance, 500, unit);
 
 // Roads
-var roadsContents = fs.readFileSync('../data/roads_aoi.json'),
+var roadsContents = fs.readFileSync('../../data/roads_aoi.json'),
     roadsData = JSON.parse(roadsContents),
     bufferedRoads = null;
 
@@ -32,4 +32,4 @@ var newIsodistance = turf.intersect(bufferedRoads, bufferedIsodistance);
 // console.log(JSON.stringify(newIsodistance));
 var result = turf.featureCollection([newIsodistance]);
 
-fs.writeFileSync('../data/isodistance_intersect_roads.json', JSON.stringify(result));
+fs.writeFileSync('../../data/isodistance_intersect_roads.json', JSON.stringify(result));

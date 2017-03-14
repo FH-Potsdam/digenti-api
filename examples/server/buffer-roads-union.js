@@ -4,7 +4,7 @@ var fs = require('fs')
 var unit = 'meters',
     buffer = 500;
 
-var roadsContents = fs.readFileSync('../data/roads_aoi.json');
+var roadsContents = fs.readFileSync('../../data/roads_aoi.json');
 var roadsData = JSON.parse(roadsContents);
 var union = null;
 
@@ -22,6 +22,6 @@ for (var i=0; i<roadsData.features.length; i++) {
 
 var result = turf.featureCollection([union]);
 
-fs.writeFileSync('../data/roads_aoi_buffer_500_union.json', JSON.stringify(result));
+fs.writeFileSync('../../data/roads_aoi_buffer_500_union.json', JSON.stringify(result));
 
 // console.log(JSON.stringify(result));
