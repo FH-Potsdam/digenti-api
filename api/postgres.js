@@ -590,13 +590,31 @@ function getFOSByGeoJSONLineString(req, res, next) {
 
                 var fc = data[0];
 
+                // Filter by FOS value
+                var fcFOS1 = utils.geojson.filter(fc, "fos", 1),
+                    fcFOS2 = utils.geojson.filter(fc, "fos", 2),
+                    fcFOS3 = utils.geojson.filter(fc, "fos", 3);
+
+                // Calculate area
+                var areaFOS1 = Math.round(turf.area(fcFOS1)),
+                    areaFOS2 = Math.round(turf.area(fcFOS2)),
+                    areaFOS3 = Math.round(turf.area(fcFOS3));
+
+                console.log("FOS 1: " + areaFOS1 + ", FOS 2: " + areaFOS2 + ", FOS 3: " + areaFOS3);
+                console.log("Total threat: " + (areaFOS1+areaFOS2+areaFOS3));
+
                 // Add query properties
                 fc.properties = {
                     query: 'fos/linestring',
                     feature: feature.geometry.type,
                     buffer: buffer,
                     intersect: (intersect ? 'yes' : 'no'),
-                    cacheId: cacheID
+                    cacheId: cacheID,
+                    threatStats: {
+                        fos1: areaFOS1,
+                        fos2: areaFOS2,
+                        fos3: areaFOS3
+                    }
                 };
 
                 // cache FOS JSON

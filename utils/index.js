@@ -11,6 +11,10 @@ utils.here = here;
 var postgres = require('./postgres');
 utils.postgres = postgres;
 
+// GeoJSON utils
+var geojson = require('./geojson');
+utils.geojson = geojson;
+
 // GEOPROCESSING utils
 var geo = require('./geoprocessing');
 utils.geo = geo;
