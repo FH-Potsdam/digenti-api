@@ -64,6 +64,7 @@ here.processRouteResponse = function(res, params) {
 
     var properties = {};
     properties['routeId'] = routeId;
+    properties['cacheId'] = params['waypoint0'] + '_' + params['waypoint1'];
     properties['distance'] = distance;
     properties['travelTime'] = travelTime;
     properties['waypoints'] = waypointsArray;
@@ -71,8 +72,6 @@ here.processRouteResponse = function(res, params) {
     var linestring = turf.lineString(coordsArray, properties);
 
     return linestring;
-
-
 }
 
 

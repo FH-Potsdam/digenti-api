@@ -540,43 +540,75 @@ function getFOSByGeoJSONLineString(req, res, next) {
 
     console.log("Get FOS values for GeoJSON LineString '" + feature.geometry.type + "' within buffer of " + buffer + " m");
 
-    var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+    // Check caché
+    var cacheID = null;
 
-    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
-             FROM (SELECT 'Feature' As type \
-                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
-                  )) As properties \
-                , ST_AsGeoJSON(lg.geom)::json As geometry \
-               FROM (	 \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID(ST_GeomFromGeoJSON('"+JSON.stringify(feature.geometry)+"'), 4326), "+bufferGrad+") AS geom \
-            		) \
-            		SELECT \
-            		    p.gid AS uid, fos.gid AS gid, dn, \
-                        " + fosGeom + " AS geom \
-            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
-            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
-               ) As lg ) As f;")
-        .then(function (data) {
+    // If is a route from our API, it will have a cacheId
+    if (typeof feature.properties.cacheId !== 'undefined') {
+        cacheID = feature.properties.cacheId;
+    // If not, let's build it from the LineString first and end coordinates
+    } else {
+        var coords = feature.geometry.coordinates;
+        var start = coords[0],
+            end = coords[coords.length-1];
+        cacheID = 'geo!'+start[1]+','+start[0] + '_' + 'geo!'+end[1]+','+end[0];
+    }
 
-            var fc = data[0];
+    // Get cached file
+    var filename = cacheID + '_buf' + buffer + (intersect ? '_int' : '') + '.json'
+    var file = utils.cache.getCacheFile("fos", filename);
 
-            // Add query properties
-            fc.properties = {
-                query: 'fos/linestring',
-                feature: feature.geometry.type,
-                buffer: buffer,
-                intersect: (intersect ? 'yes' : 'no')
-            };
+    // File is cached and available
+    if (utils.cache.checkCacheValidity(file)) {
 
-            // Response
-            res.status(200)
-                .json(fc);
-        })
-        .catch(function (err) {
-            return next(err);
-        });
+        console.log("FILE IS IN CACHE!!!");
+        var cacheContent = utils.cache.readCacheFile(file);
+        res.status(200).json(cacheContent);
+
+    // File is not cached
+    } else {
+        // Intersect or not
+        var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+
+        db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+                 FROM (SELECT 'Feature' As type \
+                    , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
+                      )) As properties \
+                    , ST_AsGeoJSON(lg.geom)::json As geometry \
+                   FROM (	 \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_Buffer(ST_SetSRID(ST_GeomFromGeoJSON('"+JSON.stringify(feature.geometry)+"'), 4326), "+bufferGrad+") AS geom \
+                		) \
+                		SELECT \
+                		    p.gid AS uid, fos.gid AS gid, dn, \
+                            " + fosGeom + " AS geom \
+                		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+                		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                   ) As lg ) As f;")
+            .then(function (data) {
+
+                var fc = data[0];
+
+                // Add query properties
+                fc.properties = {
+                    query: 'fos/linestring',
+                    feature: feature.geometry.type,
+                    buffer: buffer,
+                    intersect: (intersect ? 'yes' : 'no'),
+                    cacheId: cacheID
+                };
+
+                // cache FOS JSON
+                utils.cache.writeCacheFile(file, fc);
+
+                // Response
+                res.status(200).json(fc);
+            })
+            .catch(function (err) {
+                return next(err);
+            });
+    }
 }
 
 // // api/fos/route
