@@ -437,42 +437,66 @@ function getFOSByGeoJSONPolygon(req, res, next) {
 
     console.log("Get FOS values for GeoJSON Polygon '" + feature.geometry.type + "'");
 
-    var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+    // Get cached file -> this will work only for upstream areas
 
-    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
-             FROM (SELECT 'Feature' As type \
-                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
-                  )) As properties \
-                , ST_AsGeoJSON(lg.geom)::json As geometry \
-               FROM (	 \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_SetSRID(ST_GeomFromGeoJSON('"+JSON.stringify(feature.geometry)+"'), 4326) AS geom \
-            		) \
-            		SELECT \
-            		    p.gid AS uid, fos.gid AS gid, dn, \
-                        " + fosGeom + " AS geom \
-            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
-            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
-               ) As lg ) As f;")
-        .then(function (data) {
+    var cacheID, filename, file = null;
+    if (typeof feature.properties.osm_id !== 'undefined') {
+        cacheID = "upstream_" + feature.properties.osm_id;
+        filename = cacheID + (intersect ? '_int' : '') + '.json'
+        file = utils.cache.getCacheFile("fos", filename);
+    }
 
-            var fc = data[0];
+    // File is cached and available
+    if (cacheID != null && utils.cache.checkCacheValidity(file)) {
+        console.log("FILE IS IN CACHE!!!");
+        var cacheContent = utils.cache.readCacheFile(file);
+        res.status(200).json(cacheContent);
 
-            // Add query properties
-            fc.properties = {
-                query: 'fos/polygon',
-                feature: feature.geometry.type,
-                intersect: (intersect ? 'yes' : 'no')
-            };
+    // File is not cached
+    } else {
 
-            // Response
-            res.status(200)
-                .json(fc);
-        })
-        .catch(function (err) {
-            return next(err);
-        });
+        var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+
+        db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+                 FROM (SELECT 'Feature' As type \
+                    , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
+                      )) As properties \
+                    , ST_AsGeoJSON(lg.geom)::json As geometry \
+                   FROM (	 \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_SetSRID(ST_GeomFromGeoJSON('"+JSON.stringify(feature.geometry)+"'), 4326) AS geom \
+                		) \
+                		SELECT \
+                		    p.gid AS uid, fos.gid AS gid, dn, \
+                            " + fosGeom + " AS geom \
+                		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+                		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                   ) As lg ) As f;")
+            .then(function (data) {
+
+                var fc = data[0];
+
+                // Add query properties
+                fc.properties = {
+                    query: 'fos/polygon',
+                    feature: feature.geometry.type,
+                    intersect: (intersect ? 'yes' : 'no')
+                };
+
+                if (cacheID != null) {
+                    // cache FOS JSON
+                    utils.cache.writeCacheFile(file, fc);
+                }
+
+                // Response
+                res.status(200)
+                    .json(fc);
+            })
+            .catch(function (err) {
+                return next(err);
+            });
+    }
 }
 
 // api/fos/point
@@ -488,43 +512,63 @@ function getFOSByGeoJSONPoint(req, res, next) {
 
     console.log("Get FOS values for GeoJSON Point '" + feature.geometry.type + "' within buffer of " + buffer + " m");
 
-    var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+    // Get cached file
+    var coords = feature.geometry.coordinates;
+    var cacheID = 'point_'+coords[1]+','+coords[0];
+    var filename = cacheID + '_buf' + buffer + (intersect ? '_int' : '') + '.json'
+    var file = utils.cache.getCacheFile("fos", filename);
 
-    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
-             FROM (SELECT 'Feature' As type \
-                , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
-                  )) As properties \
-                , ST_AsGeoJSON(lg.geom)::json As geometry \
-               FROM (	 \
-            		WITH polygons AS (SELECT \
-            		    1 AS gid, \
-            		    ST_Buffer(ST_SetSRID(ST_GeomFromGeoJSON('"+JSON.stringify(feature.geometry)+"'), 4326), "+bufferGrad+") AS geom \
-            		) \
-            		SELECT \
-            		    p.gid AS uid, fos.gid AS gid, dn, \
-                        " + fosGeom + " AS geom \
-            		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
-            		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
-               ) As lg ) As f;")
-        .then(function (data) {
+    // File is cached and available
+    if (utils.cache.checkCacheValidity(file)) {
 
-            var fc = data[0];
+        console.log("FILE IS IN CACHE!!!");
+        var cacheContent = utils.cache.readCacheFile(file);
+        res.status(200).json(cacheContent);
 
-            // Add query properties
-            fc.properties = {
-                query: 'fos/point',
-                feature: feature.geometry.type,
-                buffer: buffer,
-                intersect: (intersect ? 'yes' : 'no')
-            };
+    // File is not cached
+    } else {
 
-            // Response
-            res.status(200)
-                .json(fc);
-        })
-        .catch(function (err) {
-            return next(err);
-        });
+        var fosGeom = (intersect) ? 'ST_Intersection(fos.geom, p.geom)' : 'fos.geom';
+
+        db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+                 FROM (SELECT 'Feature' As type \
+                    , row_to_json((SELECT l FROM (SELECT dn as fos) As l \
+                      )) As properties \
+                    , ST_AsGeoJSON(lg.geom)::json As geometry \
+                   FROM (	 \
+                		WITH polygons AS (SELECT \
+                		    1 AS gid, \
+                		    ST_Buffer(ST_SetSRID(ST_GeomFromGeoJSON('"+JSON.stringify(feature.geometry)+"'), 4326), "+bufferGrad+") AS geom \
+                		) \
+                		SELECT \
+                		    p.gid AS uid, fos.gid AS gid, dn, \
+                            " + fosGeom + " AS geom \
+                		FROM polygons AS p, " + config.db.tables.fos + " AS fos \
+                		WHERE ST_Intersects(p.geom, fos.geom) AND fos.dn < 4 \
+                   ) As lg ) As f;")
+            .then(function (data) {
+
+                var fc = data[0];
+
+                // Add query properties
+                fc.properties = {
+                    query: 'fos/point',
+                    feature: feature.geometry.type,
+                    buffer: buffer,
+                    intersect: (intersect ? 'yes' : 'no')
+                };
+
+                // cache FOS JSON
+                utils.cache.writeCacheFile(file, fc);
+
+                // Response
+                res.status(200)
+                    .json(fc);
+            })
+            .catch(function (err) {
+                return next(err);
+            });
+    }
 }
 
 // api/fos/linestring
@@ -544,15 +588,15 @@ function getFOSByGeoJSONLineString(req, res, next) {
     var cacheID = null;
 
     // If is a route from our API, it will have a cacheId
-    if (typeof feature.properties.cacheId !== 'undefined') {
-        cacheID = feature.properties.cacheId;
-    // If not, let's build it from the LineString first and end coordinates
-    } else {
+    // if (typeof feature.properties.cacheId !== 'undefined') {
+    //     cacheID = feature.properties.cacheId;
+    // // If not, let's build it from the LineString first and end coordinates
+    // } else {
         var coords = feature.geometry.coordinates;
         var start = coords[0],
             end = coords[coords.length-1];
-        cacheID = 'geo!'+start[1]+','+start[0] + '_' + 'geo!'+end[1]+','+end[0];
-    }
+        cacheID = 'geo!'+start[1]+','+start[0] + '_' + 'geo!'+end[1]+','+end[0]+'_len'+coords.length; // Add length in case there are alternative routes
+    // }
 
     // Get cached file
     var filename = cacheID + '_buf' + buffer + (intersect ? '_int' : '') + '.json'
