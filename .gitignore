@@ -3,5 +3,6 @@ config.js
 *.log
 .DS_Store
 cache/
+cache_bkp/
 
 data.json
