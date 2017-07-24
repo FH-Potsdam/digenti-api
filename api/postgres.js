@@ -825,7 +825,8 @@ function getSpecialAreasByCoords(req, res, next) {
                 		    ST_Buffer(ST_SetSRID(ST_GeomFromText('"+point+"'), 4326), "+bufferGrad+") AS geom \
                 		) \
                 		SELECT DISTINCT \
-                            area.ndvi AS ndvi, area.gradient AS gradient, \
+                            area.ndvi AS ndvi, \
+                            area.gradient AS gradient, \
                 		    ST_Intersection(p.geom, area.geom) AS geom \
                 		FROM polygons AS p, " + config.db.tables.specialareas + " AS area \
                 		WHERE ST_Intersects(p.geom, area.geom) AND area.ndvi <= " + ndvi + " AND area.gradient <= " + gradient + " \

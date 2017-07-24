@@ -4,5 +4,6 @@ config.js
 .DS_Store
 cache/
 cache_bkp/
+__cache/
 
 data.json
