@@ -813,44 +813,70 @@ function getSpecialAreasByCoords(req, res, next) {
     console.log("Get Special Areas values from " + req.params.coords + " within buffer of " + buffer + " m");
     console.log("  -- NDVI threshold: (" + ndvi + ") " + utils.strings.ndvi[ndvi-1] + ", Gradient threshold: (" + gradient + ") " + utils.strings.gradient[gradient-1]);
 
-    db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
-             FROM (SELECT 'Feature' As type \
-                , row_to_json((SELECT l FROM (SELECT ndvi, gradient) As l \
-                  )) As properties \
-                , ST_AsGeoJSON(lg.geom)::json As geometry \
-               FROM (	 \
-                   SELECT ndvi, gradient, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
-                		WITH polygons AS (SELECT \
-                		    1 AS gid, \
-                		    ST_Buffer(ST_SetSRID(ST_GeomFromText('"+point+"'), 4326), "+bufferGrad+") AS geom \
-                		) \
-                		SELECT DISTINCT \
-                            area.ndvi AS ndvi, \
-                            area.gradient AS gradient, \
-                		    ST_Intersection(p.geom, area.geom) AS geom \
-                		FROM polygons AS p, " + config.db.tables.specialareas + " AS area \
-                		WHERE ST_Intersects(p.geom, area.geom) AND area.ndvi <= " + ndvi + " AND area.gradient <= " + gradient + " \
-                    ) As sp \
-               ) As lg ) As f;")
-        .then(function (data) {
-            var fc = data[0];
+    // Get cached file
+    var cacheID = 'point_'+coords[1]+','+coords[0];
+    console.log("cacheID: " + cacheID);
 
-            // Add query properties
-            fc.properties = {
-                query: 'specialareas/point',
-                coords: req.params.coords,
-                buffer: buffer,
-                intersect: 'yes'
-            };
+    // var filename = cacheID + '_ndvi' + ndvi + '_gradient' + gradient + '_buf' + buffer + (intersect ? '_int' : '') + '.json'
+    var filename = cacheID + '_ndvi' + ndvi + '_gradient' + gradient + '_buf' + buffer + '_int' + '.json';
 
-            // Response
-            res.status(200)
-                .json(fc);
-        })
-        .catch(function (err) {
-            console.log("error");
-            return next(err);
-        });
+    console.log("filename: " + filename);
+
+    var file = utils.cache.getCacheFile("landing", filename);
+
+    // File is cached and available
+    if (utils.cache.checkCacheValidity(file)) {
+
+        console.log("FILE IS IN CACHE!!!");
+        var cacheContent = utils.cache.readCacheFile(file);
+        res.status(200).json(cacheContent);
+
+    // File is not cached
+    } else {
+
+        db.any("SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features \
+                 FROM (SELECT 'Feature' As type \
+                    , row_to_json((SELECT l FROM (SELECT ndvi, gradient) As l \
+                      )) As properties \
+                    , ST_AsGeoJSON(lg.geom)::json As geometry \
+                   FROM (	 \
+                       SELECT ndvi, gradient, ST_GeometryN(geom, generate_series(1, ST_NumGeometries(geom))) As geom FROM ( \
+                            WITH polygons AS (SELECT \
+                                1 AS gid, \
+                                ST_Buffer(ST_SetSRID(ST_GeomFromText('"+point+"'), 4326), "+bufferGrad+") AS geom \
+                            ) \
+                            SELECT DISTINCT \
+                                area.ndvi AS ndvi, \
+                                area.gradient AS gradient, \
+                                ST_Intersection(p.geom, area.geom) AS geom \
+                            FROM polygons AS p, " + config.db.tables.specialareas + " AS area \
+                            WHERE ST_Intersects(p.geom, area.geom) AND area.ndvi <= " + ndvi + " AND area.gradient <= " + gradient + " \
+                        ) As sp \
+                   ) As lg ) As f;")
+            .then(function (data) {
+                var fc = data[0];
+
+                // Add query properties
+                fc.properties = {
+                    query: 'specialareas/point',
+                    coords: req.params.coords,
+                    buffer: buffer,
+                    intersect: 'yes'
+                };
+
+                if (file) {
+                    utils.cache.writeCacheFile(file, fc);
+                }
+
+                // Response
+                res.status(200)
+                    .json(fc);
+            })
+            .catch(function (err) {
+                console.log("error");
+                return next(err);
+            });
+    }
 }
 
 // api/specialareas/:ndvi/:gradient/points/:coords1/:coords2/:buffer
