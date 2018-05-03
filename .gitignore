@@ -5,5 +5,8 @@ config.js
 cache/
 cache_bkp/
 __cache/
+_cache/
+cache_temp/
+npm-debug.log*
 
 data.json
